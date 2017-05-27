@@ -1,9 +1,3 @@
-import pandas as pd
-import logging
-
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
-
 DEATH_COLUMNS = [
   "revision",
   "laterec",
@@ -344,8 +338,19 @@ DEATH_COLUMNS = [
   "hospd",
   "weekdayd",
   "dthyr",
-  "dthmon"
+  "dthmon",
 ]
+
+import pandas as pd
+import logging
+import warnings
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score
+
+warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 deaths = pd.read_csv("deaths_2010.csv", names=DEATH_COLUMNS, skiprows=1)
 
@@ -354,21 +359,15 @@ FEATURE_COLUMNS = ["mager41"]
 # record weight
 LABEL_COLUMN = "recwt"
 
-# 90% train, 10% test
-# 24174 = 21757 + 2417
-train_deaths = deaths[:21757]
-test_deaths = deaths[21757:]
+X_deaths, y_deaths = deaths[FEATURE_COLUMNS], deaths[LABEL_COLUMN]
 
-train_features, train_labels = train_deaths[FEATURE_COLUMNS], train_deaths[LABEL_COLUMN]
 
-test_features = test_deaths[FEATURE_COLUMNS]
 
-logging.debug('Running linear regresssion')
+logging.info("Running linear regresssion")
+logging.info
 
-from sklearn.linear_model import LinearRegression
 linear_regression = LinearRegression()
-linear_regression.fit(train_features, train_labels)
+scores = cross_val_score(linear_regression, X_deaths, y_deaths, cv=10, scoring='neg_mean_squared_error')
 
-predicted_label = linear_regression.predict(test_features)
-
-logging.debug('Ran linear regresssion [co-efficient={}, intercept={}]'.format(linear_regression.coef_, linear_regression.intercept_))
+logging.info("Ran linear regresssion")
+logging.info("MSEs {:0.10f} (+/- {:0.10f})".format(scores.mean(), scores.std() * 2))
