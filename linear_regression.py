@@ -362,9 +362,9 @@ LABEL_COLUMN = "recwt"
 X_deaths, y_deaths = deaths[FEATURE_COLUMNS], deaths[LABEL_COLUMN]
 
 
-
 logging.info("Running linear regresssion")
-logging.info
+logging.info("X_deaths=\n{}".format(X_deaths[:10]))
+logging.info("Y_deaths=\n{}".format(y_deaths[:10]))
 
 linear_regression = LinearRegression()
 scores = cross_val_score(linear_regression, X_deaths, y_deaths, cv=10, scoring='neg_mean_squared_error')
