@@ -345,7 +345,6 @@ import pandas as pd
 import logging
 import warnings
 
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
 
@@ -355,19 +354,18 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 deaths = pd.read_csv("deaths_2010.csv", names=DEATH_COLUMNS, skiprows=1)
 
 # mother age
-FEATURE_COLUMNS = ["mager41"]
+X_COLUMNS = ["mager41"]
 # record weight
-LABEL_COLUMN = "recwt"
+Y_COLUMN = "recwt"
 
-X_deaths, y_deaths = deaths[FEATURE_COLUMNS], deaths[LABEL_COLUMN]
-
+X, y = deaths[X_COLUMNS], deaths[Y_COLUMN]
+logging.info("X=\n{}".format(X[:10]))
+logging.info("y=\n{}".format(y[:10]))
 
 logging.info("Running linear regresssion")
-logging.info("X_deaths=\n{}".format(X_deaths[:10]))
-logging.info("Y_deaths=\n{}".format(y_deaths[:10]))
 
 linear_regression = LinearRegression()
-scores = cross_val_score(linear_regression, X_deaths, y_deaths, cv=10, scoring='neg_mean_squared_error')
+scores = cross_val_score(linear_regression, X, y, cv=10, scoring='neg_mean_squared_error')
 
 logging.info("Ran linear regresssion")
-logging.info("MSEs {:0.10f} (+/- {:0.10f})".format(scores.mean(), scores.std() * 2))
+logging.info("MSE {:0.10f} (+/- {:0.10f})".format(scores.mean(), scores.std() * 2))
