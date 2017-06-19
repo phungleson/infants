@@ -3,14 +3,17 @@ import tensorflow as tf
 import numpy as np
 
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
 
 from infants import deaths
 from infants import births
 from infants import X_COLUMNS
 
+one_hot_encoder = OneHotEncoder()
+
 # Import MNIST data
-from tensorflow.examples.tutorials.mnist import input_data
-mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
+# from tensorflow.examples.tutorials.mnist import input_data
+# mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
 
 import logging
 import warnings
@@ -21,7 +24,12 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 X1, y1 = deaths[X_COLUMNS], pd.Series([1] * 24174)
 X2, y2 = births[X_COLUMNS], pd.Series([0] * 24175)
 
+# X1_one_hot = one_hot_encoder.fit_transform(X1)
+# X2_one_hot = one_hot_encoder.fit_transform(X2)
+
 X_all, y_all = pd.concat([X1, X2]), pd.concat([y1, y2])
+
+X_all = pd.SparseDataFrame(one_hot_encoder.fit_transform(X_all))
 
 X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.30)
 
@@ -34,12 +42,12 @@ examples_to_show = 10
 
 
 # Network Parameters
-# n_hidden_1 = 32
-# n_hidden_2 = 16
-# n_input = len(X_COLUMNS)
-n_hidden_1 = 256 # 1st layer num features
-n_hidden_2 = 128 # 2nd layer num features
-n_input = 784 # MNIST data input (img shape: 28*28)
+n_hidden_1 = 32
+n_hidden_2 = 16
+n_input = 4288
+# n_hidden_1 = 256 # 1st layer num features
+# n_hidden_2 = 128 # 2nd layer num features
+# n_input = 784 # MNIST data input (img shape: 28*28)
 
 
 X = tf.placeholder("float", [None, n_input])
@@ -103,17 +111,17 @@ init = tf.global_variables_initializer()
 with tf.Session() as sess:
     logging.info("Running session")
     sess.run(init)
-    # total_batch = int(X_train.size / batch_size)
-    total_batch = int(mnist.train.num_examples/batch_size)
+    total_batch = int(X_train.size / batch_size)
+    # total_batch = int(mnist.train.num_examples/batch_size)
 
     # Training cycle
     for epoch in range(training_epochs):
         logging.info("Running epoch={:04d}".format(epoch + 1))
         # Loop over all batches
         for i in range(total_batch):
-            # X_batch = X_train[i * batch_size:(i + 1) * batch_size]
-            batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-            print(batch_xs)
+            batch_xs = X_train[i * batch_size:(i + 1) * batch_size]
+            # batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+            # print(batch_xs)
             # Run optimization op (backprop) and cost op (to get loss value)
             _, cost = sess.run([optimizer_op, cost_op], feed_dict={X: batch_xs})
 
