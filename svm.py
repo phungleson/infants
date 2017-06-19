@@ -29,11 +29,11 @@ logging.info("y2=\n{}".format(y2[:10]))
 logging.info("X=\n{}".format(X[:10]))
 logging.info("y=\n{}".format(y[:10]))
 
-logging.debug("Running SVM")
+logging.info("Running SVM")
 
 # http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
 clf = SVC(probability=True, random_state=0)
 scores = cross_val_score(clf, X, y, cv=10, scoring='f1')
 
-logging.debug("Ran SVM")
+logging.info("Ran SVM")
 logging.info("Mean F1 {:0.2f} (+/- {:0.2f})".format(scores.mean(), scores.std() * 2))

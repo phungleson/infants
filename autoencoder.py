@@ -8,6 +8,16 @@ from infants import deaths
 from infants import births
 from infants import X_COLUMNS
 
+# Import MNIST data
+from tensorflow.examples.tutorials.mnist import input_data
+mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
+
+import logging
+import warnings
+
+warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
 X1, y1 = deaths[X_COLUMNS], pd.Series([1] * 24174)
 X2, y2 = births[X_COLUMNS], pd.Series([0] * 24175)
 
@@ -24,9 +34,12 @@ examples_to_show = 10
 
 
 # Network Parameters
-n_hidden_1 = 32
-n_hidden_2 = 16
-n_input = len(X_COLUMNS)
+# n_hidden_1 = 32
+# n_hidden_2 = 16
+# n_input = len(X_COLUMNS)
+n_hidden_1 = 256 # 1st layer num features
+n_hidden_2 = 128 # 2nd layer num features
+n_input = 784 # MNIST data input (img shape: 28*28)
 
 
 X = tf.placeholder("float", [None, n_input])
@@ -45,29 +58,33 @@ biases = {
 }
 
 # Building the encoder
-def encoder(x):
+def construct_encoder_op(x):
+    logging.info("Constructing encoder op")
     # Encoder Hidden layer with sigmoid activation #1
     layer_1 = tf.nn.sigmoid(
         tf.add(tf.matmul(x, weights['encoder_h1']), biases['encoder_b1']))
     # Decoder Hidden layer with sigmoid activation #2
     layer_2 = tf.nn.sigmoid(
         tf.add(tf.matmul(layer_1, weights['encoder_h2']), biases['encoder_b2']))
+    logging.info("Constructed encoder op")
     return layer_2
 
 # Building the decoder
-def decoder(x):
+def construct_decoder_op(x):
+    logging.info("Constructing decoder op")
     # Encoder Hidden layer with sigmoid activation #1
     layer_1 = tf.nn.sigmoid(
         tf.add(tf.matmul(x, weights['decoder_h1']), biases['decoder_b1']))
     # Decoder Hidden layer with sigmoid activation #2
     layer_2 = tf.nn.sigmoid(
         tf.add(tf.matmul(layer_1, weights['decoder_h2']), biases['decoder_b2']))
+    logging.info("Constructed decoder op")
     return layer_2
 
 
 # Construct model
-encoder_op = encoder(X)
-decoder_op = decoder(encoder_op)
+encoder_op = construct_encoder_op(X)
+decoder_op = construct_decoder_op(encoder_op)
 
 # Prediction
 y_pred = decoder_op
@@ -75,28 +92,36 @@ y_pred = decoder_op
 y_true = X
 
 # Define loss and optimizer, minimize the squared error
-cost = tf.reduce_mean(tf.pow(y_true - y_pred, 2))
-optimizer = tf.train.RMSPropOptimizer(learning_rate).minimize(cost)
+logging.info("Constructing lost op")
+cost_op = tf.reduce_mean(tf.pow(y_true - y_pred, 2))
+optimizer_op = tf.train.RMSPropOptimizer(learning_rate).minimize(cost_op)
 
 # Initializing the variables
 init = tf.global_variables_initializer()
 
 # Launch the graph
 with tf.Session() as sess:
+    logging.info("Running session")
     sess.run(init)
-    total_batch = int(X_train.size / batch_size)
+    # total_batch = int(X_train.size / batch_size)
+    total_batch = int(mnist.train.num_examples/batch_size)
+
     # Training cycle
     for epoch in range(training_epochs):
+        logging.info("Running epoch={:04d}".format(epoch + 1))
         # Loop over all batches
         for i in range(total_batch):
-            X_batch = X_train[i * batch_size:(i + 1) * batch_size]
+            # X_batch = X_train[i * batch_size:(i + 1) * batch_size]
+            batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+            print(batch_xs)
             # Run optimization op (backprop) and cost op (to get loss value)
-            _, c = sess.run([optimizer, cost], feed_dict={X: X_batch})
+            _, cost = sess.run([optimizer_op, cost_op], feed_dict={X: batch_xs})
+
         # Display logs per epoch step
         if epoch % display_step == 0:
-            print("Epoch:", '%04d' % (epoch + 1), "cost=", "{:.9f}".format(c))
+            logging.info("Ran epoch={:04d} cost={:.9f}".format((epoch + 1), cost))
 
-    print("Optimization Finished!")
+    logging.info("Ran session")
 
     # # Applying encode and decode over test set
     # encode_decode = sess.run(y_pred, feed_dict={X: mnist.test.images[:examples_to_show]})
