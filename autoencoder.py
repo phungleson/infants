@@ -4,12 +4,14 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler
 
 from infants import deaths
 from infants import births
 from infants import X_COLUMNS
 
-one_hot_encoder = OneHotEncoder()
+# one_hot_encoder = OneHotEncoder()
+min_max_scaler = MinMaxScaler()
 
 # Import MNIST data
 # from tensorflow.examples.tutorials.mnist import input_data
@@ -24,12 +26,24 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 X1, y1 = deaths[X_COLUMNS], pd.Series([1] * 24174)
 X2, y2 = births[X_COLUMNS], pd.Series([0] * 24175)
 
+def sex_to_number(sex):
+    if sex == 'M':
+        return 0
+    if sex == 'F':
+        return 1
+
+X1['sex'] = X1['sex'].apply(sex_to_number)
+X2['sex'] = X2['sex'].apply(sex_to_number)
+
 # X1_one_hot = one_hot_encoder.fit_transform(X1)
 # X2_one_hot = one_hot_encoder.fit_transform(X2)
 
 X_all, y_all = pd.concat([X1, X2]), pd.concat([y1, y2])
 
-X_all = pd.SparseDataFrame(one_hot_encoder.fit_transform(X_all))
+X1 = min_max_scaler.fit_transform(X1)
+# X_all = min_max_scaler.fit_transform(X_all)
+
+# X_all = pd.SparseDataFrame(one_hot_encoder.fit_transform(X_all))
 
 X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.30)
 
@@ -44,7 +58,7 @@ examples_to_show = 10
 # Network Parameters
 n_hidden_1 = 32
 n_hidden_2 = 16
-n_input = 4288
+n_input = 4
 # n_hidden_1 = 256 # 1st layer num features
 # n_hidden_2 = 128 # 2nd layer num features
 # n_input = 784 # MNIST data input (img shape: 28*28)
@@ -107,29 +121,32 @@ optimizer_op = tf.train.RMSPropOptimizer(learning_rate).minimize(cost_op)
 # Initializing the variables
 init = tf.global_variables_initializer()
 
+for index, x in enumerate(X1):
+    print(index, x)
+
 # Launch the graph
-with tf.Session() as sess:
-    logging.info("Running session")
-    sess.run(init)
-    total_batch = int(X_train.size / batch_size)
-    # total_batch = int(mnist.train.num_examples/batch_size)
+# with tf.Session() as sess:
+#     logging.info("Running session")
+#     sess.run(init)
+#     total_batch = int(X_train.size / batch_size)
+#     # total_batch = int(mnist.train.num_examples/batch_size)
 
-    # Training cycle
-    for epoch in range(training_epochs):
-        logging.info("Running epoch={:04d}".format(epoch + 1))
-        # Loop over all batches
-        for i in range(total_batch):
-            batch_xs = X_train[i * batch_size:(i + 1) * batch_size]
-            # batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-            # print(batch_xs)
-            # Run optimization op (backprop) and cost op (to get loss value)
-            _, cost = sess.run([optimizer_op, cost_op], feed_dict={X: batch_xs})
+#     # Training cycle
+#     for epoch in range(training_epochs):
+#         logging.info("Running epoch={:04d}".format(epoch + 1))
+#         # Loop over all batches
+#         for i in range(total_batch):
+#             batch_xs = X_train[i * batch_size:(i + 1) * batch_size]
+#             # batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+#             print(batch_xs[0])
+#             # Run optimization op (backprop) and cost op (to get loss value)
+#             _, cost = sess.run([optimizer_op, cost_op], feed_dict={X: batch_xs})
 
-        # Display logs per epoch step
-        if epoch % display_step == 0:
-            logging.info("Ran epoch={:04d} cost={:.9f}".format((epoch + 1), cost))
+#         # Display logs per epoch step
+#         if epoch % display_step == 0:
+#             logging.info("Ran epoch={:04d} cost={:.9f}".format((epoch + 1), cost))
 
-    logging.info("Ran session")
+#     logging.info("Ran session")
 
     # # Applying encode and decode over test set
     # encode_decode = sess.run(y_pred, feed_dict={X: mnist.test.images[:examples_to_show]})

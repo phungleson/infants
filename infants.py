@@ -595,20 +595,14 @@ X_COLUMNS = [
   "dob_yy",
   "dob_mm",
   "dob_wk",
-  # empty
-  # "ostate",
-  # "ocntyfips",
-  # "ocntypop",
-
-  # some
-  # "bfacil",
+  # "ostate", # empty
+  # "ocntyfips", # empty
+  # "ocntypop", # empty
+  # "bfacil", # some
   "ubfacil",
-  # "bfacil3",
-
-  # empty
-  # "mage_impflg",
-  # "mage_repflg",
-
+  # "bfacil3", # some
+  # "mage_impflg", # empty
+  # "mage_repflg", # empty
   "mager41",
   "mager14",
   "mager9",
@@ -835,6 +829,15 @@ X_COLUMNS = [
   # "aged",
   # "ager5",
   # "ager22",
+]
+
+X_COLUMNS = [
+  "dob_yy",
+  "dob_mm",
+  "dob_wk",
+  "f_meduc",
+  "sex",
+  "mager41",
 ]
 
 import pandas as pd
