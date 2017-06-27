@@ -835,9 +835,20 @@ X_COLUMNS = [
   "dob_yy",
   "dob_mm",
   "dob_wk",
-  "f_meduc",
+  "ubfacil",
+  "restatus",
+  # "mrace",
+  "umhisp",
+  "mar",
+  # "umeduc", ??? how to fix the missing data
+  "ufagecomb",
+  "fracerec",
+  "ufhisp",
+
+  # "mpcb",
+  # "f_meduc",
   "sex",
-  "mager41",
+  # "mager41",
 ]
 
 import pandas as pd

@@ -40,7 +40,7 @@ X2['sex'] = X2['sex'].apply(sex_to_number)
 
 X_all, y_all = pd.concat([X1, X2]), pd.concat([y1, y2])
 
-X1 = min_max_scaler.fit_transform(X1)
+# X1 = min_max_scaler.fit_transform(X1)
 # X_all = min_max_scaler.fit_transform(X_all)
 
 # X_all = pd.SparseDataFrame(one_hot_encoder.fit_transform(X_all))
@@ -121,8 +121,15 @@ optimizer_op = tf.train.RMSPropOptimizer(learning_rate).minimize(cost_op)
 # Initializing the variables
 init = tf.global_variables_initializer()
 
-for index, x in enumerate(X1):
-    print(index, x)
+print(X1.__class__)
+
+for x_index, x in X1.iterrows():
+    print(x.__class__)
+    # for value_index, value in enumerate(x):
+    #     print(value)
+        # if value == '':
+        #     print(x_index, value_index)
+
 
 # Launch the graph
 # with tf.Session() as sess:
