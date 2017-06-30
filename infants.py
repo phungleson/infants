@@ -595,151 +595,151 @@ X_COLUMNS = [
   "dob_yy",
   "dob_mm",
   "dob_wk",
-  # "ostate", # empty
-  # "ocntyfips", # empty
-  # "ocntypop", # empty
-  # "bfacil", # some
+  "ostate", # empty
+  "ocntyfips", # empty
+  "ocntypop", # empty
+  "bfacil", # some
   "ubfacil",
-  # "bfacil3", # some
-  # "mage_impflg", # empty
-  # "mage_repflg", # empty
+  "bfacil3", # some
+  "mage_impflg", # empty
+  "mage_repflg", # empty
   "mager41",
   "mager14",
   "mager9",
-  # "mbcntry", none
-  # "mrterr", none
-  # "mrcntyfips", none
-  # "rcnty_pop", none
-  # "rectype", none
+  "mbcntry", # none
+  "mrterr", # none
+  "mrcntyfips", # none
+  "rcnty_pop", # none
+  "rectype", # none
   "restatus",
-  # "mbrace", some
-  # "mrace", some
+  "mbrace", # some
+  "mrace", # some
   "mracerec",
-  # "mraceimp", some
+  "mraceimp", # some
   "umhisp",
   "mracehisp", # -
   "mar",
-  # "mar_imp", some
-  # "meduc", some
-  # "umeduc", some
-  # "meduc_rec", some
-  # "fagerpt_flg", some
-  # "fagecomb", some
+  "mar_imp", # some
+  "meduc", # some
+  "umeduc", # some
+  "meduc_rec", # some
+  "fagerpt_flg", # some
+  "fagecomb", # some
   "ufagecomb", # -
   "fagerec11", # -
-  # "fbrace", some
+  "fbrace", # some
   "fracerec",
   "ufhisp", # -
   "fracehisp", # -
-  # "frace", some
-  # "lbo", empty
-  # "tbo", empty
-  # "dllb_mm", empty
-  # "dllb_yy", empty
-  # "precare", empty
-  # "precare_rec", empty
-  # "mpcb", some
-  # "mpcb_rec6", some
-  # "mpcb_rec5", some
+  "frace", # some
+  "lbo", # empty
+  "tbo", # empty
+  "dllb_mm", # empty
+  "dllb_yy", # empty
+  "precare", # empty
+  "precare_rec", # empty
+  "mpcb", # some
+  "mpcb_rec6", # some
+  "mpcb_rec5", # some
   "uprevis",
-  # "previs_rec",
+  "previs_rec",
   "wtgain",
   "wtgain_rec",
-  # "dfpc_imp", some
-  # "cig_1", some
-  # "cig_2", some
-  # "cig_3", some
-  # "tobuse", some
-  # "cigs", some
-  # "cig_rec6",
-  # "cig_rec",
-  # "rf_diab",
-  # "rf_gest",
-  # "rf_phyp",
-  # "rf_ghyp",
-  # "rf_eclam",
-  # "rf_ppterm",
-  # "rf_ppoutc",
-  # "rf_cesar",
-  # "rf_ncesar",
+  "dfpc_imp", # some
+  "cig_1", # some
+  "cig_2", # some
+  "cig_3", # some
+  "tobuse", # some
+  "cigs", # some
+  "cig_rec6",
+  "cig_rec",
+  "rf_diab",
+  "rf_gest",
+  "rf_phyp",
+  "rf_ghyp",
+  "rf_eclam",
+  "rf_ppterm",
+  "rf_ppoutc",
+  "rf_cesar",
+  "rf_ncesar",
   "urf_diab",
   "urf_chyper",
   "urf_phyper",
   "urf_eclam",
-  # "op_cerv",
-  # "op_tocol",
-  # "op_ecvs",
-  # "op_ecvf",
+  "op_cerv",
+  "op_tocol",
+  "op_ecvs",
+  "op_ecvf",
   "uop_induc",
   "uop_tocol",
-  # "on_ruptr",
-  # "on_abrup",
-  # "on_prolg",
-  # "ld_induct",
-  # "ld_augment",
-  # "ld_nvrtx",
-  # "ld_steroids",
-  # "ld_antibio",
-  # "ld_chorio",
-  # "ld_mecon",
-  # "ld_fintol",
-  # "ld_anesth",
+  "on_ruptr",
+  "on_abrup",
+  "on_prolg",
+  "ld_induct",
+  "ld_augment",
+  "ld_nvrtx",
+  "ld_steroids",
+  "ld_antibio",
+  "ld_chorio",
+  "ld_mecon",
+  "ld_fintol",
+  "ld_anesth",
   "uld_meco",
   "uld_precip",
   "uld_breech",
-  # "md_attfor",
-  # "md_attvac",
-  # "md_present",
-  # "md_route",
-  # "md_trial",
-  # "ume_vag", some
-  # "ume_vbac", some
-  # "ume_primc", some
-  # "ume_repec", some
+  "md_attfor",
+  "md_attvac",
+  "md_present",
+  "md_route",
+  "md_trial",
+  "ume_vag", # some
+  "ume_vbac", # some
+  "ume_primc", # some
+  "ume_repec", # some
   "ume_forcp",
   "ume_vac",
-  # "rdmeth_rec",
-  # "udmeth_rec",
+  "rdmeth_rec",
+  "udmeth_rec",
   "dmeth_rec",
   "attend",
   "apgar5",
   "apgar5r",
   "dplural",
-  # "imp_plur",
-  # "sex",
-  # "imp_sex",
+  "imp_plur",
+  "sex",
+  "imp_sex",
   "dlmp_mm",
-  # "dlmp_dd",
+  "dlmp_dd",
   "dlmp_yy",
   "estgest", # +
   "combgest", # +
   "gestrec10", # +
   "gestrec3", # +
-  # "obgest_flg",
-  # "gest_imp",
+  "obgest_flg",
+  "gest_imp",
   "dbwt", # -
   "bwtr14",
   "bwtr4",
-  # "bwtimp",
-  # "ab_vent",
-  # "ab_vent6",
-  # "ab_nicu",
-  # "ab_surfac",
-  # "ab_antibio",
-  # "ab_seiz",
-  # "ab_inj",
-  # "ca_anen",
-  # "ca_menin",
-  # "ca_heart",
-  # "ca_hernia",
-  # "ca_ompha",
-  # "ca_gastro",
-  # "ca_limb",
-  # "ca_cleftlp",
-  # "ca_cleft",
-  # "ca_downs",
-  # "ca_chrom",
-  # "ca_hypos",
+  "bwtimp",
+  "ab_vent",
+  "ab_vent6",
+  "ab_nicu",
+  "ab_surfac",
+  "ab_antibio",
+  "ab_seiz",
+  "ab_inj",
+  "ca_anen",
+  "ca_menin",
+  "ca_heart",
+  "ca_hernia",
+  "ca_ompha",
+  "ca_gastro",
+  "ca_limb",
+  "ca_cleftlp",
+  "ca_cleft",
+  "ca_downs",
+  "ca_chrom",
+  "ca_hypos",
   "uca_anen",
   "uca_spina",
   "uca_ompha",
@@ -825,30 +825,10 @@ X_COLUMNS = [
   "f_uca_omphalo",
   "f_uca_cleftlp",
   "f_uca_downs",
-  # "matchs",
-  # "aged",
-  # "ager5",
-  # "ager22",
-]
-
-X_COLUMNS = [
-  "dob_yy",
-  "dob_mm",
-  "dob_wk",
-  "ubfacil",
-  "restatus",
-  # "mrace",
-  "umhisp",
-  "mar",
-  # "umeduc", ??? how to fix the missing data
-  "ufagecomb",
-  "fracerec",
-  "ufhisp",
-
-  # "mpcb",
-  # "f_meduc",
-  "sex",
-  # "mager41",
+  "matchs",
+  "aged",
+  "ager5",
+  "ager22",
 ]
 
 import pandas as pd

@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import Imputer
 
 from infants import deaths
 from infants import births
@@ -12,6 +13,7 @@ from infants import X_COLUMNS
 
 # one_hot_encoder = OneHotEncoder()
 min_max_scaler = MinMaxScaler()
+imputer = Imputer(missing_values = 'NaN')
 
 # Import MNIST data
 # from tensorflow.examples.tutorials.mnist import input_data
@@ -32,15 +34,70 @@ def sex_to_number(sex):
     if sex == 'F':
         return 1
 
+def yn_to_number(value):
+    if value == 'N':
+        return 0
+    if value == 'Y':
+        return 1
+
 X1['sex'] = X1['sex'].apply(sex_to_number)
 X2['sex'] = X2['sex'].apply(sex_to_number)
+
+yn_columns = [
+    'cig_rec', 'rf_diab', 'rf_gest', 'rf_phyp', 'rf_ghyp', 'rf_eclam', 'rf_ppterm', 'rf_ppoutc', 'rf_cesar',
+    'op_cerv', 'op_tocol', 'op_ecvs', 'op_ecvf',
+    'on_ruptr', 'on_abrup', 'on_prolg', 'ld_induct', 'ld_augment', 'ld_nvrtx', 'ld_steroids', 'ld_antibio', 'ld_chorio', 'ld_mecon', 'ld_fintol', 'ld_anesth',
+    'md_attfor', 'md_attvac',
+    'ab_vent', 'ab_vent6', 'ab_nicu', 'ab_surfac', 'ab_antibio',
+    'ca_anen', 'ca_menin', 'ca_heart', 'ca_hernia', 'ca_ompha', 'ca_gastro', 'ca_limb', 'ca_cleftlp', 'ca_cleft', 'ca_downs', 'ca_chrom', 'ca_hypos',
+]
+
+for yn_column in yn_columns:
+    X1[yn_column] = X1[yn_column].apply(yn_to_number)
+    X2[yn_column] = X2[yn_column].apply(yn_to_number)
+
+def xyn_to_number(value):
+    if value == 'N':
+        return 0
+    if value == 'Y':
+        return 1
+    if value == 'X':
+        return 1
+
+X1['md_trial'] = X1['md_trial'].apply(yn_to_number)
+X2['md_trial'] = X2['md_trial'].apply(yn_to_number)
+
+# def autopsy_to_number(autopsy):
+#     if autopsy == 'U':
+#         return 0
+#     if autopsy == 'Y':
+#         return 1
+#     if autopsy == 'N':
+#         return 2
+
+# def dispo_to_number(dispo):
+#     if dispo == 'U':
+#         return 0
+#     if dispo == 'B':
+#         return 1
+#     if dispo == 'C':
+#         return 2
+#     if dispo == 'R':
+#         return 3
+
+# X1['autopsy'] = X1['autopsy'].apply(autopsy_to_number)
+# X2['autopsy'] = X2['autopsy'].apply(autopsy_to_number)
+
+# X1['dispo'] = X1['dispo'].apply(dispo_to_number)
+# X2['dispo'] = X2['dispo'].apply(dispo_to_number)
 
 # X1_one_hot = one_hot_encoder.fit_transform(X1)
 # X2_one_hot = one_hot_encoder.fit_transform(X2)
 
 X_all, y_all = pd.concat([X1, X2]), pd.concat([y1, y2])
 
-# X1 = min_max_scaler.fit_transform(X1)
+X2 = imputer.fit_transform(X2)
+X2 = min_max_scaler.fit_transform(X2)
 # X_all = min_max_scaler.fit_transform(X_all)
 
 # X_all = pd.SparseDataFrame(one_hot_encoder.fit_transform(X_all))
@@ -58,7 +115,7 @@ examples_to_show = 10
 # Network Parameters
 n_hidden_1 = 32
 n_hidden_2 = 16
-n_input = 4
+n_input = 237
 # n_hidden_1 = 256 # 1st layer num features
 # n_hidden_2 = 128 # 2nd layer num features
 # n_input = 784 # MNIST data input (img shape: 28*28)
@@ -121,39 +178,29 @@ optimizer_op = tf.train.RMSPropOptimizer(learning_rate).minimize(cost_op)
 # Initializing the variables
 init = tf.global_variables_initializer()
 
-print(X1.__class__)
-
-for x_index, x in X1.iterrows():
-    print(x.__class__)
-    # for value_index, value in enumerate(x):
-    #     print(value)
-        # if value == '':
-        #     print(x_index, value_index)
-
-
 # Launch the graph
-# with tf.Session() as sess:
-#     logging.info("Running session")
-#     sess.run(init)
-#     total_batch = int(X_train.size / batch_size)
-#     # total_batch = int(mnist.train.num_examples/batch_size)
+with tf.Session() as sess:
+    logging.info("Running session")
+    sess.run(init)
+    total_batch = int(X_train.size / batch_size)
+    # total_batch = int(mnist.train.num_examples/batch_size)
 
-#     # Training cycle
-#     for epoch in range(training_epochs):
-#         logging.info("Running epoch={:04d}".format(epoch + 1))
-#         # Loop over all batches
-#         for i in range(total_batch):
-#             batch_xs = X_train[i * batch_size:(i + 1) * batch_size]
-#             # batch_xs, batch_ys = mnist.train.next_batch(batch_size)
-#             print(batch_xs[0])
-#             # Run optimization op (backprop) and cost op (to get loss value)
-#             _, cost = sess.run([optimizer_op, cost_op], feed_dict={X: batch_xs})
+    # Training cycle
+    for epoch in range(training_epochs):
+        logging.info("Running epoch={:04d}".format(epoch + 1))
+        # Loop over all batches
+        for i in range(total_batch):
+            batch_xs = X_train[i * batch_size:(i + 1) * batch_size]
+            # batch_xs, batch_ys = mnist.train.next_batch(batch_size)
+            # print(batch_xs[0])
+            # Run optimization op (backprop) and cost op (to get loss value)
+            _, cost = sess.run([optimizer_op, cost_op], feed_dict={X: batch_xs})
 
-#         # Display logs per epoch step
-#         if epoch % display_step == 0:
-#             logging.info("Ran epoch={:04d} cost={:.9f}".format((epoch + 1), cost))
+        # Display logs per epoch step
+        if epoch % display_step == 0:
+            logging.info("Ran epoch={:04d} cost={:.9f}".format((epoch + 1), cost))
 
-#     logging.info("Ran session")
+    logging.info("Ran session")
 
     # # Applying encode and decode over test set
     # encode_decode = sess.run(y_pred, feed_dict={X: mnist.test.images[:examples_to_show]})
