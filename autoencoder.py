@@ -71,8 +71,8 @@ X2['md_trial'] = X2['md_trial'].apply(yn_to_number)
 
 X_all, y_all = pd.concat([X1, X2]), pd.concat([y1, y2])
 
-# X_all = imputer.fit_transform(X_all)
-# X_all = min_max_scaler.fit_transform(X_all)
+X_all = imputer.fit_transform(X_all)
+X_all = min_max_scaler.fit_transform(X_all)
 
 X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.30)
 
@@ -172,7 +172,7 @@ with tf.Session() as sess:
     logging.info("Ran session")
 
     # # Applying encode and decode over test set
-    # encode_decode = sess.run(y_pred, feed_dict={X: mnist.test.images[:examples_to_show]})
+    encode_decode = sess.run(y_pred, feed_dict={X: X_test})
     # # Compare original images with their reconstructions
     # f, a = plt.subplots(2, 10, figsize=(10, 2))
     # for i in range(examples_to_show):
