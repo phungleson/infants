@@ -14,9 +14,6 @@ from infants import X_COLUMNS
 min_max_scaler = MinMaxScaler()
 imputer = Imputer(missing_values = 'NaN')
 
-# Import MNIST data
-# from tensorflow.examples.tutorials.mnist import input_data
-# mnist = input_data.read_data_sets("MNIST_data", one_hot=True)
 
 import logging
 import warnings
@@ -87,7 +84,7 @@ examples_to_show = 10
 # Network Parameters
 n_hidden_1 = 128
 n_hidden_2 = 64
-n_input = 222
+n_input = 218
 
 
 X = tf.placeholder("float", [None, n_input])
@@ -146,6 +143,16 @@ optimizer_op = tf.train.RMSPropOptimizer(learning_rate).minimize(cost_op)
 
 # Initializing the variables
 init = tf.global_variables_initializer()
+
+# print(X1.__class__)
+
+# for x in X1:
+#     print(x)
+#     for value_index, value in enumerate(x):
+#         print(value)
+#         if value == '':
+#             print(x_index, value_index)
+
 
 # Launch the graph
 with tf.Session() as sess:
