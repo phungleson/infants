@@ -78,6 +78,7 @@ learning_rate = 0.00001
 training_epochs = 200
 batch_size = 256
 display_step = 1
+test_step = 10
 examples_to_show = 10
 
 
@@ -174,6 +175,9 @@ with tf.Session() as sess:
         # Display logs per epoch step
         if epoch % display_step == 0:
             logging.info("Ran epoch={:04d} cost={:.9f}".format((epoch + 1), cost))
+
+        if epoch % test_step == 0:
+            logging.info("Running test")
 
     logging.info("Ran session")
 
