@@ -74,8 +74,8 @@ X_all = min_max_scaler.fit_transform(X_all)
 X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.30)
 
 # Parameters
-learning_rate = 0.01
-training_epochs = 20
+learning_rate = 0.00001
+training_epochs = 200
 batch_size = 256
 display_step = 1
 examples_to_show = 10
@@ -153,7 +153,6 @@ init = tf.global_variables_initializer()
 #         if value == '':
 #             print(x_index, value_index)
 
-
 # Launch the graph
 with tf.Session() as sess:
     x_train_size = int(X_train.size/n_input)
@@ -179,7 +178,7 @@ with tf.Session() as sess:
     logging.info("Ran session")
 
     # # Applying encode and decode over test set
-    encode_decode = sess.run(y_pred, feed_dict={X: X_test})
+    # encode_decode = sess.run(y_pred, feed_dict={X: X_test})
     # # Compare original images with their reconstructions
     # f, a = plt.subplots(2, 10, figsize=(10, 2))
     # for i in range(examples_to_show):
