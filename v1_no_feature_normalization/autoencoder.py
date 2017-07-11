@@ -138,7 +138,7 @@ y_pred = decoder_op
 y_true = X
 
 # Define loss and optimizer, minimize the squared error
-logging.info("Constructing lost op")
+logging.info("Constructing cost op and optimizer op")
 cost_op = tf.reduce_mean(tf.pow(y_true - y_pred, 2))
 optimizer_op = tf.train.RMSPropOptimizer(learning_rate).minimize(cost_op)
 

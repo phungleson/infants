@@ -825,10 +825,10 @@ X_COLUMNS = [
   "f_uca_omphalo",
   "f_uca_cleftlp",
   "f_uca_downs",
-  # "matchs",
-  # "aged",
-  # "ager5",
-  # "ager22",
+  "matchs",
+  "aged",
+  "ager5",
+  "ager22",
 ]
 
 

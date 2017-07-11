@@ -3,17 +3,12 @@ import tensorflow as tf
 import numpy as np
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import Imputer
 
 from infants import deaths
 from infants import births
 from infants import X_COLUMNS
-
-min_max_scaler = MinMaxScaler()
-imputer = Imputer(missing_values = 'NaN')
-
 
 import logging
 import warnings
@@ -24,14 +19,16 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 X1, y1 = deaths[X_COLUMNS], pd.Series([1] * 24174)
 X2, y2 = births[X_COLUMNS], pd.Series([0] * 24175)
 
-def sex_to_number(sex):
-    if sex == 'M':
+
+logging.info("Normalizing X1, X2")
+def mf_to_number(value):
+    if value == 'M':
         return 0
-    if sex == 'F':
+    if value == 'F':
         return 1
 
-X1['sex'] = X1['sex'].apply(sex_to_number)
-X2['sex'] = X2['sex'].apply(sex_to_number)
+X1['sex'] = X1['sex'].apply(mf_to_number)
+X2['sex'] = X2['sex'].apply(mf_to_number)
 
 def yn_to_number(value):
     if value == 'N':
@@ -63,19 +60,27 @@ def xyn_to_number(value):
     if value == 'X':
         return 2
 
-X1['md_trial'] = X1['md_trial'].apply(yn_to_number)
-X2['md_trial'] = X2['md_trial'].apply(yn_to_number)
+X1['md_trial'] = X1['md_trial'].apply(xyn_to_number)
+X2['md_trial'] = X2['md_trial'].apply(xyn_to_number)
+logging.info("Normalized X1, X2")
+
 
 X_all, y_all = pd.concat([X1, X2]), pd.concat([y1, y2])
 
+
+logging.info("Scaling X1, X2")
+min_max_scaler = MinMaxScaler()
+imputer = Imputer(missing_values = 'NaN')
 X_all = imputer.fit_transform(X_all)
 X_all = min_max_scaler.fit_transform(X_all)
+logging.info("Scaled X1, X2")
+
 
 X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.30)
 
 # Parameters
-learning_rate = 0.00001
-training_epochs = 200
+learning_rate = 0.01
+training_epochs = 20
 batch_size = 256
 display_step = 1
 test_step = 10
@@ -144,15 +149,6 @@ optimizer_op = tf.train.RMSPropOptimizer(learning_rate).minimize(cost_op)
 
 # Initializing the variables
 init = tf.global_variables_initializer()
-
-# print(X1.__class__)
-
-# for x in X1:
-#     print(x)
-#     for value_index, value in enumerate(x):
-#         print(value)
-#         if value == '':
-#             print(x_index, value_index)
 
 # Launch the graph
 with tf.Session() as sess:
