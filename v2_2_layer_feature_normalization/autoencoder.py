@@ -147,7 +147,7 @@ optimizer_op = tf.train.RMSPropOptimizer(learning_rate).minimize(cost_op)
 # Initializing the variables
 init = tf.global_variables_initializer()
 
-lost_curve_file = open('lost_curve.csv', 'w')
+loss_curve_file = open('loss_curve.csv', 'w')
 
 # Launch the graph
 with tf.Session() as sess:
@@ -172,9 +172,9 @@ with tf.Session() as sess:
         if epoch % test_step == 0:
             logging.debug("Running test")
             test_cost = sess.run(cost_op, feed_dict={X: X_test})
-            lost_curve_file.write("{:.9f},{:.9f}\n".format(cost, test_cost))
+            loss_curve_file.write("{:.9f},{:.9f}\n".format(cost, test_cost))
             logging.debug("Ran test test_cost={:.9f}".format(test_cost))
 
     logging.debug("Ran session")
 
-lost_curve_file.close()
+loss_curve_file.close()
