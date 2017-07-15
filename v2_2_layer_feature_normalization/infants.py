@@ -836,4 +836,3 @@ import pandas as pd
 
 deaths = pd.read_csv("deaths_2010.csv", names=DEATH_COLUMNS, skiprows=1)
 births = pd.read_csv("births_2010_24174.csv", names=BIRTH_COLUMNS, skiprows=1)
-
