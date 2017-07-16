@@ -74,8 +74,15 @@ for index, x in X_all.iterrows():
     values = x.values
     for value in values:
         if math.isnan(value):
-            print(index)
             nan_rows_count += 1
             break
 
 logging.info("nan_rows_count={:d}".format(nan_rows_count))
+
+columns = {}
+
+for index, x in X_all.iterrows():
+    keys = x.keys
+    for key in keys:
+        if math.isnan(x[key]):
+            print(key)
