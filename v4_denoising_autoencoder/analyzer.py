@@ -77,12 +77,21 @@ for index, x in X_all.iterrows():
             nan_rows_count += 1
             break
 
-logging.info("nan_rows_count={:d}".format(nan_rows_count))
+logging.debug("nan_rows_count={:d}".format(nan_rows_count))
 
-columns = {}
+def print_all(x):
+    pd.set_option('display.max_rows', len(x))
+    print(x)
+    pd.reset_option('display.max_rows')
 
-for index, x in X_all.iterrows():
-    keys = x.keys
-    for key in keys:
-        if math.isnan(x[key]):
-            print(key)
+
+def count_nans(x):
+    return sum(x.isnull())
+
+nans_count_columns = X_all.apply(count_nans, axis=0)
+print(len(X_all))
+nans_count_columns.to_csv('nans_count_columns.csv')
+
+X_drop_nans = X_all.drop(['ostate', 'ocntyfips', 'ocntypop', 'mbcntry', 'mrterr', 'mrcntyfips', 'rcnty_pop', 'rectype'])
+
+nans_count_rows = X_all.apply(count_nans, axis=1)
