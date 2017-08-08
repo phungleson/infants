@@ -2,8 +2,17 @@
 """
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 import math
 
+from infants import X_all
+from infants import y_all
+
+import logging
+import warnings
+
+warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def corrupt(x):
     """Take an input tensor and add uniform masking.
@@ -25,11 +34,11 @@ def corrupt(x):
 
 
 # %%
-def autoencoder(dimensions=[784, 512, 256, 64]):
+def autoencoder(dimensions):
     """Build a deep denoising autoencoder w/ tied weights.
     Parameters
     ----------
-    dimensions : list, optional
+    dimensions : list
         The number of neurons for each layer of the autoencoder.
     Returns
     -------
@@ -95,15 +104,20 @@ def run():
     import tensorflow as tf
     import tensorflow.examples.tutorials.mnist.input_data as input_data
     import matplotlib.pyplot as plt
+    from infants import X_all
+    from infants import y_all
+    from sklearn.model_selection import train_test_split
 
     # %%
-    # load MNIST as before
-    mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
-    mean_img = np.mean(mnist.train.images, axis=0)
-    ae = autoencoder(dimensions=[784, 256, 64])
+    # load infants
+    X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.30)
+    batch_size = 256
+    n_epochs = 2000
+    n_input = 222
 
+    ae = autoencoder(dimensions=[n_input, 64, 32])
     # %%
-    learning_rate = 0.001
+    learning_rate = 0.00001
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(ae['cost'])
 
     # %%
@@ -113,33 +127,35 @@ def run():
 
     # %%
     # Fit all training data
-    batch_size = 50
-    n_epochs = 10
+    x_train_size = X_train.size // n_input
+    total_batch = x_train_size // batch_size
+    logging.debug("Running session total_batch={:d}, batch_size={:d}, x train size={:d}".format(
+        total_batch, batch_size, x_train_size,
+    ))
     for epoch_i in range(n_epochs):
-        for batch_i in range(mnist.train.num_examples // batch_size):
-            batch_xs, _ = mnist.train.next_batch(batch_size)
-            train = np.array([img - mean_img for img in batch_xs])
+        for batch_i in range(total_batch):
+            X_batch = X_train[batch_i * batch_size:(batch_i + 1) * batch_size]
             sess.run(optimizer, feed_dict={
-                ae['x']: train, ae['corrupt_prob']: [1.0]})
+                ae['x']: X_batch, ae['corrupt_prob']: [1.0]})
         print(epoch_i, sess.run(ae['cost'], feed_dict={
-            ae['x']: train, ae['corrupt_prob']: [1.0]}))
+            ae['x']: X_batch, ae['corrupt_prob']: [1.0]}))
 
     # %%
     # Plot example reconstructions
-    n_examples = 15
-    test_xs, _ = mnist.test.next_batch(n_examples)
-    test_xs_norm = np.array([img - mean_img for img in test_xs])
-    recon = sess.run(ae['y'], feed_dict={
-        ae['x']: test_xs_norm, ae['corrupt_prob']: [0.0]})
-    fig, axs = plt.subplots(2, n_examples, figsize=(10, 2))
-    for example_i in range(n_examples):
-        axs[0][example_i].imshow(
-            np.reshape(test_xs[example_i, :], (28, 28)))
-        axs[1][example_i].imshow(
-            np.reshape([recon[example_i, :] + mean_img], (28, 28)))
-    fig.show()
-    plt.draw()
-    plt.waitforbuttonpress()
+    # n_examples = 15
+    # test_xs, _ = mnist.test.next_batch(n_examples)
+    # test_xs_norm = np.array([img - mean_img for img in test_xs])
+    # recon = sess.run(ae['y'], feed_dict={
+    #     ae['x']: test_xs_norm, ae['corrupt_prob']: [0.0]})
+    # fig, axs = plt.subplots(2, n_examples, figsize=(10, 2))
+    # for example_i in range(n_examples):
+    #     axs[0][example_i].imshow(
+    #         np.reshape(test_xs[example_i, :], (28, 28)))
+    #     axs[1][example_i].imshow(
+    #         np.reshape([recon[example_i, :] + mean_img], (28, 28)))
+    # fig.show()
+    # plt.draw()
+    # plt.waitforbuttonpress()
 
 if __name__ == '__main__':
     run()
