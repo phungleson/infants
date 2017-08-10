@@ -112,10 +112,10 @@ def run():
     # load infants
     X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.30)
     batch_size = 256
-    n_epochs = 2000
+    n_epochs = 100
     n_input = 222
 
-    ae = autoencoder(dimensions=[n_input, 64, 32])
+    ae = autoencoder(dimensions=[n_input, 128, 64])
     # %%
     learning_rate = 0.00001
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(ae['cost'])
@@ -134,28 +134,20 @@ def run():
     ))
     for epoch_i in range(n_epochs):
         for batch_i in range(total_batch):
-            X_batch = X_train[batch_i * batch_size:(batch_i + 1) * batch_size]
+            X_train_batch = X_train[batch_i * batch_size:(batch_i + 1) * batch_size]
             sess.run(optimizer, feed_dict={
-                ae['x']: X_batch, ae['corrupt_prob']: [1.0]})
+                ae['x']: X_train_batch, ae['corrupt_prob']: [1.0]})
         print(epoch_i, sess.run(ae['cost'], feed_dict={
-            ae['x']: X_batch, ae['corrupt_prob']: [1.0]}))
+            ae['x']: X_train_batch, ae['corrupt_prob']: [1.0]}))
 
     # %%
-    # Plot example reconstructions
-    # n_examples = 15
-    # test_xs, _ = mnist.test.next_batch(n_examples)
-    # test_xs_norm = np.array([img - mean_img for img in test_xs])
-    # recon = sess.run(ae['y'], feed_dict={
-    #     ae['x']: test_xs_norm, ae['corrupt_prob']: [0.0]})
-    # fig, axs = plt.subplots(2, n_examples, figsize=(10, 2))
-    # for example_i in range(n_examples):
-    #     axs[0][example_i].imshow(
-    #         np.reshape(test_xs[example_i, :], (28, 28)))
-    #     axs[1][example_i].imshow(
-    #         np.reshape([recon[example_i, :] + mean_img], (28, 28)))
-    # fig.show()
-    # plt.draw()
-    # plt.waitforbuttonpress()
+    n_examples = 1
+    X_test_batch = X_test[0:n_examples]
+    recon = sess.run(ae['y'], feed_dict={
+        ae['x']: X_test_batch, ae['corrupt_prob']: [0.0]})
+    for example_i in range(n_examples):
+        print(X_test_batch[example_i, :])
+        print(recon[example_i, :])
 
 if __name__ == '__main__':
     run()
