@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import math
 
-from infants import X_all
-from infants import y_all
+from infants import X_all_scaled
+from infants import y_all_scaled
 
 import logging
 import warnings
@@ -104,13 +104,13 @@ def run():
     import tensorflow as tf
     import tensorflow.examples.tutorials.mnist.input_data as input_data
     import matplotlib.pyplot as plt
-    from infants import X_all
-    from infants import y_all
+    from infants import X_all_scaled
+    from infants import y_all_scaled
     from sklearn.model_selection import train_test_split
 
     # %%
     # load infants
-    X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.30)
+    X_train, X_test, y_train, y_test = train_test_split(X_all_scaled, y_all_scaled, test_size=0.30)
     batch_size = 256
     n_epochs = 100
     n_input = 222
