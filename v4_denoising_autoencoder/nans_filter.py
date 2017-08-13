@@ -18,10 +18,17 @@ X_ALL = X_ALL.drop([
     'ab_seiz', 'ab_inj',
 ], axis=1)
 
+COLUMNS_COUNT = len(X_ALL.columns)
 ROWS_COUNT = len(X_ALL)
 
-X_ALL_FILTERED = X_ALL.loc[lambda x: numpy.logical_not(x['bfacil'].isnull())]
+X_ALL_FILTERED_ROW = X_ALL.loc[X_ALL.bfacil.notnull()]
+X_ALL_FILTERED_COLUMN = X_ALL_FILTERED_ROW.dropna(axis=1, thresh=1)
 
-ROWS_COUNT_FILTERED = len(X_ALL_FILTERED)
+
+COLUMNS_COUNT_FILTERED_COLUMN = len(X_ALL_FILTERED_COLUMN.columns)
+ROWS_COUNT_FILTERED_COLUMN = len(X_ALL_FILTERED_COLUMN)
+
+print(COLUMNS_COUNT)
 print(ROWS_COUNT)
-print(ROWS_COUNT_FILTERED)
+print(COLUMNS_COUNT_FILTERED_COLUMN)
+print(ROWS_COUNT_FILTERED_COLUMN)
