@@ -898,6 +898,7 @@ X_all, y_all = pd.concat([X1, X2]), pd.concat([y1, y2])
 
 
 imputer = Imputer(missing_values = 'NaN')
-X_all = imputer.fit_transform(X_all)
+X_all_imputed = imputer.fit_transform(X_all)
+
 min_max_scaler = MinMaxScaler()
-X_all = min_max_scaler.fit_transform(X_all)
+X_all_scaled = min_max_scaler.fit_transform(X_all_imputed)
