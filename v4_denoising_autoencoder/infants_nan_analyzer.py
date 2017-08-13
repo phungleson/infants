@@ -1,4 +1,5 @@
-import math
+"""Infants analyzer
+"""
 import logging
 import warnings
 

@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import math
 
-from infants import X_all_scaled
-from infants import y_all_scaled
+from infants_notnan import X_all_scaled
+from infants_notnan import y_all_scaled
 
 import logging
 import warnings

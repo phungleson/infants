@@ -1,3 +1,11 @@
+"""Infants data
+"""
+# import logging
+import warnings
+
+warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
+# logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import Imputer
@@ -837,33 +845,20 @@ X_COLUMNS = [
 ]
 
 
-deaths = pd.read_csv("deaths_2010.csv", names=DEATH_COLUMNS, skiprows=1)
-births = pd.read_csv("births_2010_24174.csv", names=BIRTH_COLUMNS, skiprows=1)
+DEATHS_CSV = pd.read_csv("deaths_2010.csv", names=DEATH_COLUMNS, skiprows=1, low_memory=False)
+BIRTHS_CSV = pd.read_csv("births_2010_24174.csv", names=BIRTH_COLUMNS, skiprows=1, low_memory=False)
 
 
-X1, y1 = deaths[X_COLUMNS], pd.Series([1] * 24174)
-X2, y2 = births[X_COLUMNS], pd.Series([0] * 24175)
+X_DEATHS, Y_DEATHS = DEATHS_CSV[X_COLUMNS], pd.Series([1] * 24174)
+X_BIRTHS, Y_BIRTHS = BIRTHS_CSV[X_COLUMNS], pd.Series([0] * 24175)
 
 
-def mf_to_number(value):
-    if value == 'M':
-        return 0
-    if value == 'F':
-        return 1
+MF_COLUMNS = ['sex']
+X_DEATHS[MF_COLUMNS] = X_DEATHS[MF_COLUMNS].replace(['M', 'F'], [0, 1])
+X_BIRTHS[MF_COLUMNS] = X_BIRTHS[MF_COLUMNS].replace(['M', 'F'], [0, 1])
 
 
-X1['sex'] = X1['sex'].apply(mf_to_number)
-X2['sex'] = X2['sex'].apply(mf_to_number)
-
-
-def yn_to_number(value):
-    if value == 'N':
-        return 0
-    if value == 'Y':
-        return 1
-
-
-yn_columns = [
+YN_COLUMNS = [
     'cig_rec', 'rf_diab', 'rf_gest', 'rf_phyp', 'rf_ghyp', 'rf_eclam', 'rf_ppterm', 'rf_ppoutc',
     'rf_cesar',
     'op_cerv', 'op_tocol', 'op_ecvs', 'op_ecvf',
@@ -874,32 +869,22 @@ yn_columns = [
     'ca_anen', 'ca_menin', 'ca_heart', 'ca_hernia', 'ca_ompha', 'ca_gastro', 'ca_limb',
     'ca_cleftlp', 'ca_cleft', 'ca_downs', 'ca_chrom', 'ca_hypos',
 ]
+X_DEATHS[YN_COLUMNS] = X_DEATHS[YN_COLUMNS].replace(['Y', 'N', 'U', 'P', 'C'], [0, 1, 2, 3, 4])
+X_BIRTHS[YN_COLUMNS] = X_BIRTHS[YN_COLUMNS].replace(['Y', 'N', 'U', 'P', 'C'], [0, 1, 2, 3, 4])
 
 
-for yn_column in yn_columns:
-    X1[yn_column] = X1[yn_column].apply(yn_to_number)
-    X2[yn_column] = X2[yn_column].apply(yn_to_number)
+XYN_COLUMNS = ['md_trial']
+X_DEATHS[XYN_COLUMNS] = X_DEATHS[XYN_COLUMNS].replace(['X', 'Y', 'N', 'U'], [0, 1, 2, 3])
+X_BIRTHS[XYN_COLUMNS] = X_BIRTHS[XYN_COLUMNS].replace(['X', 'Y', 'N', 'U'], [0, 1, 2, 3])
 
 
-def xyn_to_number(value):
-    if value == 'N':
-        return 0
-    if value == 'Y':
-        return 1
-    if value == 'X':
-        return 2
-
-
-X1['md_trial'] = X1['md_trial'].apply(xyn_to_number)
-X2['md_trial'] = X2['md_trial'].apply(xyn_to_number)
-
-
-X_ALL, Y_ALL = pd.concat([X1, X2]), pd.concat([y1, y2])
+X_ALL, Y_ALL = pd.concat([X_DEATHS, X_BIRTHS]), pd.concat([Y_DEATHS, Y_BIRTHS])
 
 
 imputer = Imputer()
 X_ALL_IMPUTED = imputer.fit_transform(X_ALL)
 Y_ALL_IMPUTED = Y_ALL
+
 
 min_max_scaler = MinMaxScaler()
 X_ALL_SCALED = min_max_scaler.fit_transform(X_ALL_IMPUTED)
