@@ -894,13 +894,13 @@ X1['md_trial'] = X1['md_trial'].apply(xyn_to_number)
 X2['md_trial'] = X2['md_trial'].apply(xyn_to_number)
 
 
-X_all, y_all = pd.concat([X1, X2]), pd.concat([y1, y2])
+X_ALL, Y_ALL = pd.concat([X1, X2]), pd.concat([y1, y2])
 
 
 imputer = Imputer()
-X_all_imputed = imputer.fit_transform(X_all)
-y_all_imputed = y_all
+X_ALL_IMPUTED = imputer.fit_transform(X_ALL)
+Y_ALL_IMPUTED = Y_ALL
 
 min_max_scaler = MinMaxScaler()
-X_all_scaled = min_max_scaler.fit_transform(X_all_imputed)
-y_all_scaled = y_all_imputed
+X_ALL_SCALED = min_max_scaler.fit_transform(X_ALL_IMPUTED)
+Y_ALL_SCALED = Y_ALL_IMPUTED
