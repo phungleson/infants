@@ -880,6 +880,17 @@ X_BIRTHS[XYN_COLUMNS] = X_BIRTHS[XYN_COLUMNS].replace(['X', 'Y', 'N', 'U'], [0, 
 
 X_ALL, Y_ALL = pd.concat([X_DEATHS, X_BIRTHS]), pd.concat([Y_DEATHS, Y_BIRTHS])
 
+NAN_COLUMNS = [
+    'ostate', 'ocntyfips', 'ocntypop',
+    'mbcntry', 'mrterr', 'mrcntyfips',
+    'rcnty_pop', 'rectype',
+    'lbo', 'tbo',
+    'dllb_mm', 'dllb_yy',
+    'dlmp_dd',
+    'ab_seiz', 'ab_inj',
+]
+X_ALL = X_ALL.drop(NAN_COLUMNS, axis=1)
+
 
 imputer = Imputer()
 X_ALL_IMPUTED = imputer.fit_transform(X_ALL)

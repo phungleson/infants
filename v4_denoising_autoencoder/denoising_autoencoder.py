@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import math
 
-from infants_notnan import X_all_scaled
-from infants_notnan import y_all_scaled
+from infants_notnan import X_ALL_NOTNAN
+from infants import Y_ALL
 
 import logging
 import warnings
@@ -66,16 +66,19 @@ def autoencoder(dimensions):
     # but when we're ready for testing/production ready environments,
     # we'll put it back to 0.
     corrupt_prob = tf.placeholder(tf.float32, [1])
-    current_input = corrupt(x) * corrupt_prob + x * (1 - corrupt_prob)
+    current_input = x
+    # current_input.loc[:, 'bfacil'] = 0
+    # current_input[['bfacil']] = X_BIRTHS[['bfacil']].replace(['X', 'Y', 'N', 'U'], [0, 1, 2, 3])
+    # corrupt(x) * corrupt_prob + x * (1 - corrupt_prob)
 
     # Build the encoder
     encoder = []
     for layer_i, n_output in enumerate(dimensions[1:]):
-        n_input = int(current_input.get_shape()[1])
+        FEATURES_COUNT = int(current_input.get_shape()[1])
         W = tf.Variable(
-            tf.random_uniform([n_input, n_output],
-                              -1.0 / math.sqrt(n_input),
-                              1.0 / math.sqrt(n_input)))
+            tf.random_uniform([FEATURES_COUNT, n_output],
+                              -1.0 / math.sqrt(FEATURES_COUNT),
+                              1.0 / math.sqrt(FEATURES_COUNT)))
         b = tf.Variable(tf.zeros([n_output]))
         encoder.append(W)
         output = tf.nn.tanh(tf.matmul(current_input, W) + b)
@@ -104,21 +107,20 @@ def run():
     import tensorflow as tf
     import tensorflow.examples.tutorials.mnist.input_data as input_data
     import matplotlib.pyplot as plt
-    from infants import X_all_scaled
-    from infants import y_all_scaled
+    from infants_notnan import X_ALL_SCALED
     from sklearn.model_selection import train_test_split
 
     # %%
     # load infants
-    X_train, X_test, y_train, y_test = train_test_split(X_all_scaled, y_all_scaled, test_size=0.30)
-    batch_size = 256
-    n_epochs = 100
-    n_input = 222
+    X_TRAIN, X_TEST = train_test_split(X_ALL_SCALED, test_size=0.30)
+    BATCH_SIZE = 256
+    EPOCHS_COUNT = 100
+    FEATURES_COUNT = 222
 
-    ae = autoencoder(dimensions=[n_input, 128, 64])
+    ae = autoencoder(dimensions=[FEATURES_COUNT, 128, 64])
     # %%
-    learning_rate = 0.00001
-    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(ae['cost'])
+    LEARNING_RATE = 0.00001
+    optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(ae['cost'])
 
     # %%
     # We create a session to use the graph
@@ -127,27 +129,28 @@ def run():
 
     # %%
     # Fit all training data
-    x_train_size = X_train.size // n_input
-    total_batch = x_train_size // batch_size
-    logging.debug("Running session total_batch={:d}, batch_size={:d}, x train size={:d}".format(
-        total_batch, batch_size, x_train_size,
-    ))
-    for epoch_i in range(n_epochs):
-        for batch_i in range(total_batch):
-            X_train_batch = X_train[batch_i * batch_size:(batch_i + 1) * batch_size]
+    X_TRAIN_SIZE = X_TRAIN.size // FEATURES_COUNT
+    BATCHES_COUNT = X_TRAIN_SIZE // BATCH_SIZE
+    logging.debug(
+        "Running session BATCHES_COUNT=%d, BATCH_SIZE=%d, X_TRAIN_SIZE=%d",
+        BATCHES_COUNT, BATCH_SIZE, X_TRAIN_SIZE,
+    )
+    for epoch_i in range(EPOCHS_COUNT):
+        for batch_i in range(BATCHES_COUNT):
+            X_TRAIN_BATCH = X_TRAIN[batch_i * BATCH_SIZE:(batch_i + 1) * BATCH_SIZE]
             sess.run(optimizer, feed_dict={
-                ae['x']: X_train_batch, ae['corrupt_prob']: [1.0]})
+                ae['x']: X_TRAIN_BATCH, ae['corrupt_prob']: [1.0]})
         print(epoch_i, sess.run(ae['cost'], feed_dict={
-            ae['x']: X_train_batch, ae['corrupt_prob']: [1.0]}))
+            ae['x']: X_TRAIN_BATCH, ae['corrupt_prob']: [1.0]}))
 
     # %%
-    n_examples = 1
-    X_test_batch = X_test[0:n_examples]
-    recon = sess.run(ae['y'], feed_dict={
-        ae['x']: X_test_batch, ae['corrupt_prob']: [0.0]})
-    for example_i in range(n_examples):
-        print(X_test_batch[example_i, :])
-        print(recon[example_i, :])
+    # n_examples = 1
+    # X_test_batch = X_test[0:n_examples]
+    # recon = sess.run(ae['y'], feed_dict={
+    #     ae['x']: X_test_batch, ae['corrupt_prob']: [0.0]})
+    # for example_i in range(n_examples):
+    #     print(X_test_batch[example_i, :])
+    #     print(recon[example_i, :])
 
 if __name__ == '__main__':
     run()
