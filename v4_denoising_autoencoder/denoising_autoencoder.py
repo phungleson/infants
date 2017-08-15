@@ -27,10 +27,13 @@ def corrupt(x):
     x_corrupted : Tensor
         50 pct of values corrupted.
     """
-    return tf.multiply(x, tf.cast(tf.random_uniform(shape=tf.shape(x),
-                                               minval=0,
-                                               maxval=2,
-                                               dtype=tf.int32), tf.float32))
+    ones_1 = tf.ones(tf.shape(x), dtype=tf.float32)
+    zeros = tf.zeros(tf.shape(x), dtype=tf.float32)
+    ones_2 = tf.ones(tf.shape(x), dtype=tf.float32)
+
+    x_mask = tf.concat([ones_1, zeros, ones_2], 1)
+
+    return tf.multiply(x, x_mask)
 
 
 # %%
