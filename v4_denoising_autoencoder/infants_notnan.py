@@ -21,7 +21,6 @@ COLUMNS_COUNT_NOTNAN = len(X_ALL_NOTNAN.columns)
 ROWS_COUNT_NOTNAN = len(X_ALL_NOTNAN)
 
 
-# print(X_ALL[['bfacil']].max())
 min_max_scaler = MinMaxScaler()
 X_ALL_SCALED = min_max_scaler.fit_transform(X_ALL_NOTNAN)
 

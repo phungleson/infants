@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 import math
+import inspect
 
 from infants_notnan import X_ALL_NOTNAN
 from infants import Y_ALL
@@ -15,7 +16,7 @@ warnings.filterwarnings(action="ignore", module="scipy", message="^internal gels
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def corrupt(x):
-    """Take an input tensor and add uniform masking.
+    """Take an input tensor and add noise by zeroing out a column.
 
     Parameters
     ----------
@@ -27,16 +28,14 @@ def corrupt(x):
     x_corrupted : Tensor
         50 pct of values corrupted.
     """
-    length = x.get_shape().as_list()[0]
     width = x.get_shape().as_list()[1]
-    ones_1 = tf.ones([length, 1], dtype=tf.float32)
-    zeros = tf.zeros([length, 1], dtype=tf.float32)
-    ones_2 = tf.ones([length, width - 2], dtype=tf.float32)
 
-    x_mask = tf.concat([ones_1, zeros, ones_2], 1)
+    x1, x2, x3 = tf.split(x, [1, 1, width - 2], 1)
+    x2_new = tf.zeros_like(x2, dtype=tf.float32)
 
-    return tf.multiply(x, x_mask)
+    x_new = tf.concat([x1, x2_new, x3], 1)
 
+    return x_new
 
 # %%
 def autoencoder(dimensions):
@@ -59,22 +58,8 @@ def autoencoder(dimensions):
     # input to the network
     x = tf.placeholder(tf.float32, [None, dimensions[0]], name='x')
 
-    # Probability that we will corrupt input.
-    # This is the essence of the denoising autoencoder, and is pretty
-    # basic.  We'll feed forward a noisy input, allowing our network
-    # to generalize better, possibly, to occlusions of what we're
-    # really interested in.  But to measure accuracy, we'll still
-    # enforce a training signal which measures the original image's
-    # reconstruction cost.
-    #
-    # We'll change this to 1 during training
-    # but when we're ready for testing/production ready environments,
-    # we'll put it back to 0.
-    corrupt_prob = tf.placeholder(tf.float32, [1])
-    current_input = x
-    # current_input.loc[:, 'bfacil'] = 0
-    # current_input[['bfacil']] = X_BIRTHS[['bfacil']].replace(['X', 'Y', 'N', 'U'], [0, 1, 2, 3])
-    # corrupt(x) * corrupt_prob + x * (1 - corrupt_prob)
+    # Corrupt the input.
+    current_input = corrupt(x)
 
     # Build the encoder
     encoder = []
@@ -88,8 +73,10 @@ def autoencoder(dimensions):
         encoder.append(W)
         output = tf.nn.tanh(tf.matmul(current_input, W) + b)
         current_input = output
+
     # latent representation
     z = current_input
+
     encoder.reverse()
     # Build the decoder using the same weights
     for layer_i, n_output in enumerate(dimensions[:-1][::-1]):
@@ -97,17 +84,14 @@ def autoencoder(dimensions):
         b = tf.Variable(tf.zeros([n_output]))
         output = tf.nn.tanh(tf.matmul(current_input, W) + b)
         current_input = output
+
     # now have the reconstruction through the network
     y = current_input
     # cost function measures pixel-wise difference
     cost = tf.sqrt(tf.reduce_mean(tf.square(y - x)))
-    return {'x': x, 'z': z, 'y': y,
-            'corrupt_prob': corrupt_prob,
-            'cost': cost}
+    return {'x': x, 'z': z, 'y': y, 'cost': cost}
 
 # %%
-
-
 def run():
     import tensorflow as tf
     import tensorflow.examples.tutorials.mnist.input_data as input_data
@@ -120,7 +104,7 @@ def run():
     X_TRAIN, X_TEST = train_test_split(X_ALL_SCALED, test_size=0.30)
     BATCH_SIZE = 256
     EPOCHS_COUNT = 100
-    FEATURES_COUNT = 222
+    FEATURES_COUNT = 193
 
     ae = autoencoder(dimensions=[FEATURES_COUNT, 128, 64])
     # %%
@@ -129,7 +113,8 @@ def run():
 
     # %%
     # We create a session to use the graph
-    sess = tf.Session()
+    # sess = tf.Session()
+    sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
     # %%
@@ -143,10 +128,9 @@ def run():
     for epoch_i in range(EPOCHS_COUNT):
         for batch_i in range(BATCHES_COUNT):
             X_TRAIN_BATCH = X_TRAIN[batch_i * BATCH_SIZE:(batch_i + 1) * BATCH_SIZE]
-            sess.run(optimizer, feed_dict={
-                ae['x']: X_TRAIN_BATCH, ae['corrupt_prob']: [1.0]})
-        print(epoch_i, sess.run(ae['cost'], feed_dict={
-            ae['x']: X_TRAIN_BATCH, ae['corrupt_prob']: [1.0]}))
+            sess.run(optimizer, feed_dict={ae['x']: X_TRAIN_BATCH})
+        cost = sess.run(ae['cost'], feed_dict={ae['x']: X_TRAIN_BATCH})
+        print(epoch_i, cost)
 
     # %%
     # n_examples = 1
