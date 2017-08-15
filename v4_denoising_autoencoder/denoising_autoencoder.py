@@ -27,9 +27,11 @@ def corrupt(x):
     x_corrupted : Tensor
         50 pct of values corrupted.
     """
-    ones_1 = tf.ones(tf.shape(x), dtype=tf.float32)
-    zeros = tf.zeros(tf.shape(x), dtype=tf.float32)
-    ones_2 = tf.ones(tf.shape(x), dtype=tf.float32)
+    length = x.get_shape().as_list()[0]
+    width = x.get_shape().as_list()[1]
+    ones_1 = tf.ones([length, 1], dtype=tf.float32)
+    zeros = tf.zeros([length, 1], dtype=tf.float32)
+    ones_2 = tf.ones([length, width - 2], dtype=tf.float32)
 
     x_mask = tf.concat([ones_1, zeros, ones_2], 1)
 
