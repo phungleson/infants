@@ -15,7 +15,7 @@ import warnings
 warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def corrupt(x):
+def corrupt(x, features_count):
     """Take an input tensor and add noise by zeroing out a column.
 
     Parameters
@@ -28,11 +28,8 @@ def corrupt(x):
     x_corrupted : Tensor
         50 pct of values corrupted.
     """
-    width = x.get_shape().as_list()[1]
-
-    x1, x2, x3 = tf.split(x, [1, 1, width - 2], 1)
-    x2_new = tf.zeros_like(x2, dtype=tf.float32)
-
+    x1, x2, x3 = tf.split(x, [1, 1, features_count - 2], 1)
+    x2_new = tf.zeros_like(x2)
     x_new = tf.concat([x1, x2_new, x3], 1)
 
     return x_new
@@ -59,16 +56,19 @@ def autoencoder(dimensions):
     x = tf.placeholder(tf.float32, [None, dimensions[0]], name='x')
 
     # Corrupt the input.
-    current_input = corrupt(x)
+    current_input = corrupt(x, dimensions[0])
 
     # Build the encoder
     encoder = []
     for layer_i, n_output in enumerate(dimensions[1:]):
         FEATURES_COUNT = int(current_input.get_shape()[1])
         W = tf.Variable(
-            tf.random_uniform([FEATURES_COUNT, n_output],
-                              -1.0 / math.sqrt(FEATURES_COUNT),
-                              1.0 / math.sqrt(FEATURES_COUNT)))
+            tf.random_uniform(
+                [FEATURES_COUNT, n_output],
+                -1.0 / math.sqrt(FEATURES_COUNT),
+                1.0 / math.sqrt(FEATURES_COUNT),
+            )
+        )
         b = tf.Variable(tf.zeros([n_output]))
         encoder.append(W)
         output = tf.nn.tanh(tf.matmul(current_input, W) + b)
@@ -103,18 +103,18 @@ def run():
     # load infants
     X_TRAIN, X_TEST = train_test_split(X_ALL_SCALED, test_size=0.30)
     BATCH_SIZE = 256
-    EPOCHS_COUNT = 100
+    EPOCHS_COUNT = 30
     FEATURES_COUNT = 193
 
-    ae = autoencoder(dimensions=[FEATURES_COUNT, 128, 64])
+    ae = autoencoder(dimensions=[FEATURES_COUNT, 182, 160])
     # %%
-    LEARNING_RATE = 0.00001
+    LEARNING_RATE = 0.0001
     optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(ae['cost'])
 
     # %%
     # We create a session to use the graph
-    # sess = tf.Session()
-    sess = tf.InteractiveSession()
+    sess = tf.Session()
+    # sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
 
     # %%
@@ -133,13 +133,15 @@ def run():
         print(epoch_i, cost)
 
     # %%
-    # n_examples = 1
-    # X_test_batch = X_test[0:n_examples]
-    # recon = sess.run(ae['y'], feed_dict={
-    #     ae['x']: X_test_batch, ae['corrupt_prob']: [0.0]})
-    # for example_i in range(n_examples):
-    #     print(X_test_batch[example_i, :])
-    #     print(recon[example_i, :])
+    examples_count = 2
+    X_TEST_BATCH = X_TEST[0:examples_count]
+    X_TEST_BATCH_1 = sess.run(corrupt(X_TEST_BATCH, FEATURES_COUNT))
+    Y_TEST_BATCH = sess.run(ae['y'], feed_dict={ae['x']: X_TEST_BATCH_1})
+    for example_i in range(examples_count):
+        print("=================")
+        print(X_TEST_BATCH[example_i, :])
+        print(X_TEST_BATCH_1[example_i, :])
+        print(Y_TEST_BATCH[example_i, :])
 
 if __name__ == '__main__':
     run()
