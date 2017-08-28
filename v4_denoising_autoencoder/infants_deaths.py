@@ -1,4 +1,4 @@
-"""Infants processor
+"""Infants deaths
 """
 import warnings
 import pandas as pd

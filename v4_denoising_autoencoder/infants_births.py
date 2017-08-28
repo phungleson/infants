@@ -17,7 +17,7 @@ column_values = {}
 column_names = []
 
 for filename in filenames:
-    births_csv = pd.read_csv(filename, header=0, low_memory=False)
+    births_csv = pd.read_csv(filename, header=0, low_memory=False, nrows=1)
     columns_count = len(births_csv.columns)
 
     print("{} columns count: {}".format(filename, columns_count))
@@ -28,12 +28,20 @@ for filename in filenames:
     column_names = new_column_names
 
 
+import sqlite3
+from pandas.io import sql
+
+infants_sqlite = 'infants.sqlite'
+con = sqlite3.connect(infants_sqlite)
+
+
 for filename in filenames:
-    births_csv = pd.read_csv(filename, header=0, low_memory=False)
-    for column_name in births_csv.columns:
-        values = births_csv[column_name].unique()
-        values_no_nan = [x for x in values if str(x) != 'nan']
-        if column_name not in column_values:
-            column_values[column_name] = []
-        column_values[column_name] = column_values[column_name] + values_no_nan
-        # print("{} {}".format(column_name, column_values[column_name]))
+    births_chunks = pd.read_csv(filename, header=0, low_memory=False, chunksize=10000)
+    chunk_index = 0
+    for births in births_chunks:
+        sql.to_sql(births,
+                name='infants_births',
+                con=con,
+                if_exists='append')
+        chunk_index += 1
+        print("filename={} chunk_index={}".format(filename, chunk_index))
