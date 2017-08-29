@@ -13,7 +13,7 @@ filenames = [
     "linkco2010us_den.csv",
 ]
 
-
+column_values = {}
 column_names = []
 
 for filename in filenames:
@@ -27,13 +27,20 @@ for filename in filenames:
     print("column names difference: {}".format(column_names_difference))
     column_names = new_column_names
 
-column_values = {}
+
+import sqlite3
+from pandas.io import sql
+
+infants_sqlite = 'infants.sqlite'
+con = sqlite3.connect(infants_sqlite)
 
 for filename in filenames:
     births_chunks = pd.read_csv(filename, header=0, low_memory=False, chunksize=10000)
     chunk_index = 0
     for births in births_chunks:
+        sql.to_sql(births,
+                name='infants_births',
+                con=con,
+                if_exists='append')
         chunk_index += 1
         print("filename={} chunk_index={}".format(filename, chunk_index))
-        for birth in births:
-            birth
