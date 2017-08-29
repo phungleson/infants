@@ -3,3 +3,4 @@ births_2010.csv
 loss_curve.csv
 *.gz
 .DS_Store
+linkco*.csv
