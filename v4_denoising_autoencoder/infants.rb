@@ -1,5 +1,5 @@
 require 'csv'
-require 'set'
+require 'json'
 
 filenames = [
   "linkco2007us_den.csv",
@@ -25,16 +25,18 @@ filenames.each do |filename|
     values.each_with_index do |value, index|
       column = columns[index]
 
-      unique_values[column] ||= Set.new
-      unique_values[column] << value
+      unique_values[column] ||= {}
+      unique_values[column][value] ||= 0
+      unique_values[column][value] += 1
     end
+
   end
 end
 
-csv = CSV.open('infants_columns.csv', 'wb')
+csv = CSV.open('infants_columns_hash.csv', 'wb')
 
 unique_values.sort_by do |k, values|
   values.size
 end.each do |k, values|
-  csv << [k, values.to_a]
+  csv << [k, values.to_json]
 end
