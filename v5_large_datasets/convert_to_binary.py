@@ -90,16 +90,25 @@ values = tf.stack([
     v230, v231, v232, v233, v234, v235, v236, v237,
 ])
 
+writer = tf.python_io.TFRecordWriter("births_scales.tfrecords")
 
 with tf.Session() as sess:
     # Start populating the filename queue.
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
 
-    for i in range(1200):
-        # Retrieve a single instance:
-        features = sess.run([values])
-        print(features)
+    for i in range(12986017):
+        features = sess.run(values)
+        example = tf.train.Example(
+            features=tf.train.Features(
+                feature={
+                    'values': tf.train.Feature(
+                        float_list=tf.train.FloatList(value=features)),
+                }
+            )
+        )
+        serialized_example = example.SerializeToString()
+        writer.write(serialized_example)
 
     coord.request_stop()
     coord.join(threads)

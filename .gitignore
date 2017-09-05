@@ -4,3 +4,6 @@ loss_curve.csv
 *.gz
 .DS_Store
 linkco*.csv
+births_scales.csv
+births_scales.tfrecords
+.vscode

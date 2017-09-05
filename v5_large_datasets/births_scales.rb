@@ -37,7 +37,6 @@ filenames.each do |filename|
     index += 1
 
     puts "Processing filename=#{filename},index=#{index}" if index % 10_000 == 0
-    break if index % 10 == 0
 
     if index == 0
       all_columns = values
@@ -45,6 +44,7 @@ filenames.each do |filename|
       # ignore nan column
       if columns.empty?
         columns = all_columns - births_columns_nans.keys
+        puts columns.size
         csv_out << columns
       end
       next
