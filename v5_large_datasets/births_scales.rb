@@ -35,7 +35,6 @@ filenames.each do |filename|
 
   CSV.foreach(filename) do |values|
     linenumber += 1
-    puts linenumber
 
     puts "Processing filename=#{filename},linenumber=#{linenumber}" if linenumber % 10_000 == 0
 
