@@ -29,16 +29,17 @@ end
 csv_out = CSV.open('births_scales.csv', 'w')
 
 filenames.each do |filename|
-  index = -1
+  linenumber = -1
   all_columns = []
   columns = []
 
   CSV.foreach(filename) do |values|
-    index += 1
+    linenumber += 1
+    puts linenumber
 
-    puts "Processing filename=#{filename},index=#{index}" if index % 10_000 == 0
+    puts "Processing filename=#{filename},linenumber=#{linenumber}" if linenumber % 10_000 == 0
 
-    if index == 0
+    if linenumber == 0
       all_columns = values
 
       # ignore nan column
@@ -47,6 +48,7 @@ filenames.each do |filename|
         puts columns.size
         csv_out << columns
       end
+
       next
     end
 

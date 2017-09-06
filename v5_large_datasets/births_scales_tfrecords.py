@@ -97,7 +97,7 @@ with tf.Session() as sess:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
 
-    for i in range(12986017):
+    for i in range(16724141):
         features = sess.run(values)
         example = tf.train.Example(
             features=tf.train.Features(
