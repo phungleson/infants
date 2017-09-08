@@ -27,25 +27,37 @@ CSV.foreach('births_columns_nans.csv') do |row|
 end
 
 csv_out = CSV.open('births_scales.csv', 'w')
+all_columns = []
+columns = []
 
 filenames.each do |filename|
   linenumber = -1
-  all_columns = []
-  columns = []
+  new_all_columns = []
+  new_columns = []
 
   CSV.foreach(filename) do |values|
     linenumber += 1
 
-    puts "Processing filename=#{filename},linenumber=#{linenumber}" if linenumber % 10_000 == 0
+    if linenumber % 10_000 == 0
+      puts "Processing filename=#{filename},linenumber=#{linenumber}"
+    end
 
     if linenumber == 0
-      all_columns = values
+      new_all_columns = values
+      new_columns = new_all_columns - births_columns_nans.keys
 
       # ignore nan column
-      if columns.empty?
-        columns = all_columns - births_columns_nans.keys
-        puts columns.size
+      if columns.size == 0
+        all_columns = new_all_columns
+        columns = new_columns
         csv_out << columns
+      else
+        columns.each_with_index do |e, index|
+          new_index = new_columns.index(e)
+          if index != new_index
+            raise 'Headers are not the same'
+          end
+        end
       end
 
       next
@@ -99,7 +111,7 @@ filenames.each do |filename|
     if scaled_values.size == columns.size
       csv_out << scaled_values
     else
-      raise "Something wrong index=#{index} scaled_values.size #{scaled_values.size}, columns.size #{columns.size}, #{nan_count}"
+      raise "Something wrong linenumber=#{linenumber} scaled_values.size=#{scaled_values.size}, columns.size=#{columns.size}, nan_count=#{nan_count}"
     end
   end
 end
