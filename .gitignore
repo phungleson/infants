@@ -6,4 +6,5 @@ loss_curve.csv
 linkco*.csv
 births_scales.csv
 births_scales.tfrecords
+logs
 .vscode

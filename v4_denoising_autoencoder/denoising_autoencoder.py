@@ -6,9 +6,6 @@ import pandas as pd
 import math
 import inspect
 
-from infants_notnan import X_ALL_NOTNAN
-from infants import Y_ALL
-
 import logging
 import warnings
 
@@ -28,7 +25,7 @@ def corrupt(x, features_count):
     x_corrupted : Tensor
         50 pct of values corrupted.
     """
-    x1, x2, x3 = tf.split(x, [1, 1, features_count - 2], 1)
+    x1, x2, x3 = tf.split(x, [1, 1, features_count - 2], axis=1)
     x2_new = tf.zeros_like(x2)
     x_new = tf.concat([x1, x2_new, x3], 1)
 
@@ -61,12 +58,12 @@ def autoencoder(dimensions):
     # Build the encoder
     encoder = []
     for layer_i, n_output in enumerate(dimensions[1:]):
-        FEATURES_COUNT = int(current_input.get_shape()[1])
+        features_count = int(current_input.get_shape()[1])
         W = tf.Variable(
             tf.random_uniform(
-                [FEATURES_COUNT, n_output],
-                -1.0 / math.sqrt(FEATURES_COUNT),
-                1.0 / math.sqrt(FEATURES_COUNT),
+                [features_count, n_output],
+                -1.0 / math.sqrt(features_count),
+                1.0 / math.sqrt(features_count),
             )
         )
         b = tf.Variable(tf.zeros([n_output]))
@@ -87,8 +84,11 @@ def autoencoder(dimensions):
 
     # now have the reconstruction through the network
     y = current_input
+
     # cost function measures pixel-wise difference
     cost = tf.sqrt(tf.reduce_mean(tf.square(y - x)))
+    tf.summary.scalar('cost', cost)
+
     return {'x': x, 'z': z, 'y': y, 'cost': cost}
 
 # %%
@@ -96,7 +96,8 @@ def run():
     import tensorflow as tf
     import tensorflow.examples.tutorials.mnist.input_data as input_data
     import matplotlib.pyplot as plt
-    from infants_notnan import X_ALL_SCALED
+    from infants import X_ALL
+    from infants import X_ALL_SCALED
     from sklearn.model_selection import train_test_split
 
     # %%
@@ -104,9 +105,9 @@ def run():
     X_TRAIN, X_TEST = train_test_split(X_ALL_SCALED, test_size=0.30)
     BATCH_SIZE = 256
     EPOCHS_COUNT = 30
-    FEATURES_COUNT = 193
+    FEATURES_COUNT = len(X_ALL.columns)
 
-    ae = autoencoder(dimensions=[FEATURES_COUNT, 182, 160])
+    ae = autoencoder(dimensions=[FEATURES_COUNT, FEATURES_COUNT + 7, FEATURES_COUNT + 14, FEATURES_COUNT + 21, FEATURES_COUNT + 28])
     # %%
     LEARNING_RATE = 0.0001
     optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(ae['cost'])
@@ -114,8 +115,9 @@ def run():
     # %%
     # We create a session to use the graph
     sess = tf.Session()
-    # sess = tf.InteractiveSession()
     sess.run(tf.global_variables_initializer())
+
+    file_writer = tf.summary.FileWriter('logs', sess.graph)
 
     # %%
     # Fit all training data
@@ -130,7 +132,7 @@ def run():
             X_TRAIN_BATCH = X_TRAIN[batch_i * BATCH_SIZE:(batch_i + 1) * BATCH_SIZE]
             sess.run(optimizer, feed_dict={ae['x']: X_TRAIN_BATCH})
         cost = sess.run(ae['cost'], feed_dict={ae['x']: X_TRAIN_BATCH})
-        print(epoch_i, cost)
+        logging.debug("Running [epoch_index=%s, cost=%s]", epoch_i, cost)
 
     # %%
     examples_count = 2
