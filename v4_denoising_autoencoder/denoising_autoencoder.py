@@ -32,7 +32,7 @@ def corrupt(x, features_count):
     return x_new
 
 # %%
-def autoencoder(dimensions):
+def get_autoencoder(dimensions):
     """Build a deep denoising autoencoder w/ tied weights.
     Parameters
     ----------
@@ -58,18 +58,23 @@ def autoencoder(dimensions):
     # Build the encoder
     encoder = []
     for layer_i, n_output in enumerate(dimensions[1:]):
-        features_count = int(current_input.get_shape()[1])
-        W = tf.Variable(
-            tf.random_uniform(
-                [features_count, n_output],
-                -1.0 / math.sqrt(features_count),
-                1.0 / math.sqrt(features_count),
+        with tf.name_scope("encoder_{}".format(layer_i)):
+            features_count = int(current_input.get_shape()[1])
+            W = tf.Variable(
+                tf.random_uniform(
+                    [features_count, n_output],
+                    -1.0 / math.sqrt(features_count),
+                    1.0 / math.sqrt(features_count),
+                ),
+                name='W'
             )
-        )
-        b = tf.Variable(tf.zeros([n_output]))
-        encoder.append(W)
-        output = tf.nn.tanh(tf.matmul(current_input, W) + b)
-        current_input = output
+            b = tf.Variable(tf.zeros([n_output]), name='b')
+            encoder.append(W)
+            a = tf.nn.tanh(tf.matmul(current_input, W) + b)
+            tf.summary.histogram('weights', W)
+            tf.summary.histogram('biases', b)
+            tf.summary.histogram('activations', a)
+            current_input = a
 
     # latent representation
     z = current_input
@@ -77,17 +82,22 @@ def autoencoder(dimensions):
     encoder.reverse()
     # Build the decoder using the same weights
     for layer_i, n_output in enumerate(dimensions[:-1][::-1]):
-        W = tf.transpose(encoder[layer_i])
-        b = tf.Variable(tf.zeros([n_output]))
-        output = tf.nn.tanh(tf.matmul(current_input, W) + b)
-        current_input = output
+        with tf.name_scope("decoder_{}".format(layer_i)):
+            W = tf.transpose(encoder[layer_i], name='W')
+            b = tf.Variable(tf.zeros([n_output]), name='b')
+            a = tf.nn.tanh(tf.matmul(current_input, W) + b)
+            tf.summary.histogram('weights', W)
+            tf.summary.histogram('biases', b)
+            tf.summary.histogram('activations', a)
+            current_input = a
 
     # now have the reconstruction through the network
     y = current_input
 
     # cost function measures pixel-wise difference
-    cost = tf.sqrt(tf.reduce_mean(tf.square(y - x)))
-    tf.summary.scalar('cost', cost)
+    with tf.name_scope('cost'):
+        cost = tf.sqrt(tf.reduce_mean(tf.square(y - x)))
+        tf.summary.scalar('cost', cost)
 
     return {'x': x, 'z': z, 'y': y, 'cost': cost}
 
@@ -107,18 +117,19 @@ def run():
     EPOCHS_COUNT = 30
     FEATURES_COUNT = len(X_ALL.columns)
 
-    ae = autoencoder(dimensions=[FEATURES_COUNT, FEATURES_COUNT + 7, FEATURES_COUNT + 14, FEATURES_COUNT + 21, FEATURES_COUNT + 28])
+    autoencoder = get_autoencoder(dimensions=[FEATURES_COUNT, FEATURES_COUNT + 7, FEATURES_COUNT + 14, FEATURES_COUNT + 21, FEATURES_COUNT + 28])
     # %%
     LEARNING_RATE = 0.0001
-    optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(ae['cost'])
+    with tf.name_scope('train'):
+        optimizer = tf.train.AdamOptimizer(LEARNING_RATE).minimize(autoencoder['cost'])
 
     # %%
     # We create a session to use the graph
     sess = tf.Session()
     sess.run(tf.global_variables_initializer())
-
-    file_writer = tf.summary.FileWriter('logs', sess.graph)
-
+    merged_summaries = tf.summary.merge_all()
+    file_writer = tf.summary.FileWriter('logs')
+    file_writer.add_graph(sess.graph)
     # %%
     # Fit all training data
     X_TRAIN_SIZE = X_TRAIN.size // FEATURES_COUNT
@@ -130,20 +141,23 @@ def run():
     for epoch_i in range(EPOCHS_COUNT):
         for batch_i in range(BATCHES_COUNT):
             X_TRAIN_BATCH = X_TRAIN[batch_i * BATCH_SIZE:(batch_i + 1) * BATCH_SIZE]
-            sess.run(optimizer, feed_dict={ae['x']: X_TRAIN_BATCH})
-        cost = sess.run(ae['cost'], feed_dict={ae['x']: X_TRAIN_BATCH})
-        logging.debug("Running [epoch_index=%s, cost=%s]", epoch_i, cost)
+            sess.run(optimizer, feed_dict={autoencoder['x']: X_TRAIN_BATCH})
+
+        # cost = sess.run(ae['cost'], feed_dict={ae['x']: X_TRAIN_BATCH})
+        summaries = sess.run(merged_summaries, feed_dict={autoencoder['x']: X_TRAIN_BATCH})
+        file_writer.add_summary(summaries, epoch_i)
+        logging.debug("Running [epoch_index=%s]", epoch_i)
 
     # %%
-    examples_count = 2
-    X_TEST_BATCH = X_TEST[0:examples_count]
-    X_TEST_BATCH_1 = sess.run(corrupt(X_TEST_BATCH, FEATURES_COUNT))
-    Y_TEST_BATCH = sess.run(ae['y'], feed_dict={ae['x']: X_TEST_BATCH_1})
-    for example_i in range(examples_count):
-        print("=================")
-        print(X_TEST_BATCH[example_i, :])
-        print(X_TEST_BATCH_1[example_i, :])
-        print(Y_TEST_BATCH[example_i, :])
+    # examples_count = 2
+    # X_TEST_BATCH = X_TEST[0:examples_count]
+    # X_TEST_BATCH_1 = sess.run(corrupt(X_TEST_BATCH, FEATURES_COUNT))
+    # Y_TEST_BATCH = sess.run(ae['y'], feed_dict={ae['x']: X_TEST_BATCH_1})
+    # for example_i in range(examples_count):
+    #     print("=================")
+    #     print(X_TEST_BATCH[example_i, :])
+    #     print(X_TEST_BATCH_1[example_i, :])
+    #     print(Y_TEST_BATCH[example_i, :])
 
 if __name__ == '__main__':
     run()
