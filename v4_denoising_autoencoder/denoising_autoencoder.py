@@ -12,24 +12,21 @@ import warnings
 warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def corrupt(x, features_count):
-    """Take an input tensor and add noise by zeroing out a column.
-
+def corrupt(x):
+    """Take an input tensor and add uniform masking.
     Parameters
     ----------
     x : Tensor/Placeholder
         Input to corrupt.
-
     Returns
     -------
     x_corrupted : Tensor
         50 pct of values corrupted.
     """
-    x1, x2, x3 = tf.split(x, [1, 1, features_count - 2], axis=1)
-    x2_new = tf.zeros_like(x2)
-    x_new = tf.concat([x1, x2_new, x3], 1)
-
-    return x_new
+    random_uniform = tf.random_uniform(shape=tf.shape(x), minval=0, maxval=2, dtype=tf.int32)
+    random_uniform = tf.cast(random_uniform, tf.float32)
+    corrupted_x = tf.multiply(x, random_uniform)
+    return corrupted_x
 
 # %%
 def get_autoencoder(dimensions):
@@ -53,7 +50,7 @@ def get_autoencoder(dimensions):
     x = tf.placeholder(tf.float32, [None, dimensions[0]], name='x')
 
     # Corrupt the input.
-    current_input = corrupt(x, dimensions[0])
+    current_input = corrupt(x)
 
     # Build the encoder
     encoder = []
