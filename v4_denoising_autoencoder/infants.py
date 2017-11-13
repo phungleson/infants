@@ -860,8 +860,12 @@ X_DEATHS, Y_DEATHS = DEATHS_CSV[X_COLUMNS], pd.Series([1] * 24174)
 X_BIRTHS, Y_BIRTHS = BIRTHS_CSV[X_COLUMNS], pd.Series([0] * 24175)
 
 
-X_ALL = pd.concat([X_DEATHS, X_BIRTHS])
-Y_ALL = pd.concat([Y_DEATHS, Y_BIRTHS])
+X_ALL = pd.concat([X_DEATHS, X_BIRTHS], ignore_index=True)
+Y_ALL = pd.concat([Y_DEATHS, Y_BIRTHS], ignore_index=True)
+
+IDX = np.random.permutation(X_ALL.index)
+X_ALL = X_ALL.reindex(IDX)
+Y_ALL = Y_ALL.reindex(IDX)
 
 for column_name in X_ALL.columns.values:
     values = X_ALL[column_name].unique()

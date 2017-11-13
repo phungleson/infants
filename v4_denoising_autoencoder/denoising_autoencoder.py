@@ -9,6 +9,8 @@ import inspect
 import logging
 import warnings
 
+from sklearn.svm import SVC
+from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import Imputer
 
 warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
@@ -130,12 +132,14 @@ def run():
     import tensorflow.examples.tutorials.mnist.input_data as input_data
     import matplotlib.pyplot as plt
     from infants import X_ALL
+    from infants import Y_ALL
     from infants import X_ALL_SCALED
     from sklearn.model_selection import train_test_split
 
     # %%
     # load infants
-    X_TRAIN, X_TEST = train_test_split(X_ALL_SCALED, test_size=0.30)
+    X_TRAIN, X_TEST = train_test_split(X_ALL_SCALED, test_size=0.30, shuffle=False)
+    Y_TRAIN, Y_TEST = train_test_split(Y_ALL, test_size=0.30, shuffle=False)
     BATCH_SIZE = 256
     EPOCHS_COUNT = 100
     FEATURES_COUNT = len(X_ALL.columns)
@@ -176,6 +180,21 @@ def run():
     print(cost)
     _cost = sess.run(imputation_cost(X_TEST))
     print(_cost)
+
+    X_TEST_NEW = sess.run(autoencoder['y'], feed_dict={autoencoder['x']: X_TEST, autoencoder['corrupt_prob']: [0.0]})
+
+    clf = SVC(probability=True, random_state=0)
+    scores = cross_val_score(clf, X_TEST_NEW, Y_TEST, cv=10, scoring='f1')
+
+    logging.info("Ran SVM DAE")
+    logging.info("Mean F1 {:0.2f} (+/- {:0.2f})".format(scores.mean(), scores.std() * 2))
+
+    imputer = Imputer(missing_values=0)
+    X_TEST_IMPUTED = imputer.fit_transform(X_TEST)
+    scores = cross_val_score(clf, X_TEST_IMPUTED, Y_TEST, cv=10, scoring='f1')
+
+    logging.info("Ran SVM IMPUTED")
+    logging.info("Mean F1 {:0.2f} (+/- {:0.2f})".format(scores.mean(), scores.std() * 2))
 
 if __name__ == '__main__':
     run()
