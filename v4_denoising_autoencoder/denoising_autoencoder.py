@@ -9,6 +9,8 @@ import inspect
 import logging
 import warnings
 
+from sklearn.preprocessing import Imputer
+
 warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -23,10 +25,11 @@ def corrupt(x):
     x_corrupted : Tensor
         50 pct of values corrupted.
     """
-    random_uniform = tf.random_uniform(shape=tf.shape(x), minval=0, maxval=2, dtype=tf.int32)
-    random_uniform = tf.cast(random_uniform, tf.float32)
-    corrupted_x = tf.multiply(x, random_uniform)
-    return corrupted_x
+    with tf.name_scope("corruption"):
+        random_uniform = tf.random_uniform(shape=tf.shape(x), minval=0, maxval=2, dtype=tf.int32)
+        random_uniform = tf.cast(random_uniform, tf.float32)
+        corrupted_x = tf.multiply(x, random_uniform)
+        return corrupted_x
 
 # %%
 def get_autoencoder(dimensions):
@@ -49,8 +52,9 @@ def get_autoencoder(dimensions):
     # input to the network
     x = tf.placeholder(tf.float32, [None, dimensions[0]], name='x')
 
-    # Corrupt the input.
-    current_input = corrupt(x)
+    # Corrupt the input with corrupt_prob, so that we can control test or train
+    corrupt_prob = tf.placeholder(tf.float32, [1])
+    current_input = corrupt(x) * corrupt_prob + x * (1 - corrupt_prob)
 
     # Build the encoder
     encoder = []
@@ -96,7 +100,29 @@ def get_autoencoder(dimensions):
         cost = tf.sqrt(tf.reduce_mean(tf.square(y - x)))
         tf.summary.scalar('cost', cost)
 
-    return {'x': x, 'z': z, 'y': y, 'cost': cost}
+    return {'x': x, 'z': z, 'y': y, 'cost': cost, 'corrupt_prob': corrupt_prob}
+
+def imputation_cost(xx):
+    imputer = Imputer(missing_values=0)
+    yy = imputer.fit_transform(xx)
+
+    nan_column_indexes = []
+    column_index = -1
+    for _values in xx.T:
+        column_index += 1
+        values = np.unique(_values)
+
+        values_count = len(values)
+        nans_count = len([value for value in values if value == 0])
+
+        if values_count == 1:
+            if nans_count == 1:
+                nan_column_indexes.append(column_index)
+
+    xx_ = np.delete(xx, nan_column_indexes, axis=1)
+
+    cost = tf.sqrt(tf.reduce_mean(tf.square(yy - xx_)))
+    return cost
 
 # %%
 def run():
@@ -111,7 +137,7 @@ def run():
     # load infants
     X_TRAIN, X_TEST = train_test_split(X_ALL_SCALED, test_size=0.30)
     BATCH_SIZE = 256
-    EPOCHS_COUNT = 30
+    EPOCHS_COUNT = 100
     FEATURES_COUNT = len(X_ALL.columns)
 
     autoencoder = get_autoencoder(dimensions=[FEATURES_COUNT, FEATURES_COUNT + 7, FEATURES_COUNT + 14, FEATURES_COUNT + 21, FEATURES_COUNT + 28])
@@ -138,23 +164,18 @@ def run():
     for epoch_i in range(EPOCHS_COUNT):
         for batch_i in range(BATCHES_COUNT):
             X_TRAIN_BATCH = X_TRAIN[batch_i * BATCH_SIZE:(batch_i + 1) * BATCH_SIZE]
-            sess.run(optimizer, feed_dict={autoencoder['x']: X_TRAIN_BATCH})
+            sess.run(optimizer, feed_dict={autoencoder['x']: X_TRAIN_BATCH, autoencoder['corrupt_prob']: [1.0]})
 
         # cost = sess.run(ae['cost'], feed_dict={ae['x']: X_TRAIN_BATCH})
-        summaries = sess.run(merged_summaries, feed_dict={autoencoder['x']: X_TRAIN_BATCH})
+        summaries = sess.run(merged_summaries, feed_dict={autoencoder['x']: X_TRAIN_BATCH, autoencoder['corrupt_prob']: [1.0]})
         file_writer.add_summary(summaries, epoch_i)
         logging.debug("Running [epoch_index=%s]", epoch_i)
 
     # %%
-    # examples_count = 2
-    # X_TEST_BATCH = X_TEST[0:examples_count]
-    # X_TEST_BATCH_1 = sess.run(corrupt(X_TEST_BATCH, FEATURES_COUNT))
-    # Y_TEST_BATCH = sess.run(ae['y'], feed_dict={ae['x']: X_TEST_BATCH_1})
-    # for example_i in range(examples_count):
-    #     print("=================")
-    #     print(X_TEST_BATCH[example_i, :])
-    #     print(X_TEST_BATCH_1[example_i, :])
-    #     print(Y_TEST_BATCH[example_i, :])
+    cost = sess.run(autoencoder['cost'], feed_dict={autoencoder['x']: X_TEST, autoencoder['corrupt_prob']: [0.0]})
+    print(cost)
+    _cost = sess.run(imputation_cost(X_TEST))
+    print(_cost)
 
 if __name__ == '__main__':
     run()

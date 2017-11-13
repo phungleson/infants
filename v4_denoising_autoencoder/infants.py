@@ -863,9 +863,7 @@ X_BIRTHS, Y_BIRTHS = BIRTHS_CSV[X_COLUMNS], pd.Series([0] * 24175)
 X_ALL = pd.concat([X_DEATHS, X_BIRTHS])
 Y_ALL = pd.concat([Y_DEATHS, Y_BIRTHS])
 
-
 for column_name in X_ALL.columns.values:
-# for column_name in ['rf_ncesar']:
     values = X_ALL[column_name].unique()
 
     values_count = len(values)
