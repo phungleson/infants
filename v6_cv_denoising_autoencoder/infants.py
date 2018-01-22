@@ -853,11 +853,14 @@ def column_indexes(data_frame, column_names):
 
 
 DEATHS_CSV = pd.read_csv("deaths_2010.csv", names=DEATH_COLUMNS, skiprows=1, low_memory=False)
-BIRTHS_CSV = pd.read_csv("births_2010_24174.csv", names=BIRTH_COLUMNS, skiprows=1, low_memory=False)
+# _24174
+BIRTHS_CSV = pd.read_csv("births_2010_1000000.csv", names=BIRTH_COLUMNS, skiprows=1, low_memory=False)
 
 
-X_DEATHS, Y_DEATHS = DEATHS_CSV[X_COLUMNS], pd.Series([1] * 24174)
-X_BIRTHS, Y_BIRTHS = BIRTHS_CSV[X_COLUMNS], pd.Series([0] * 24175)
+X_DEATHS = DEATHS_CSV[X_COLUMNS]
+Y_DEATHS = pd.Series([1] * len(X_DEATHS))
+X_BIRTHS = BIRTHS_CSV[X_COLUMNS]
+Y_BIRTHS = pd.Series([0] * len(X_BIRTHS))
 
 
 X_ALL = pd.concat([X_DEATHS, X_BIRTHS], ignore_index=True)

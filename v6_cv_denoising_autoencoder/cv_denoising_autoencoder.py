@@ -12,6 +12,7 @@ import warnings
 from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import Imputer
+from sklearn.model_selection import StratifiedKFold
 
 warnings.filterwarnings(action="ignore", module="scipy", message="^internal gelsd")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -126,6 +127,36 @@ def imputation_cost(xx):
     cost = tf.sqrt(tf.reduce_mean(tf.square(yy - xx_)))
     return cost
 
+def run_train(session, optimizer, autoencoder, x_train, y_train):
+    batch_size = 255
+    logging.debug("Run training")
+    logging.debug(x_train.__class__)
+    for epoch in range(10):
+        # shuffle x_train
+        # idx = np.random.permutation(x_train.index)
+        # x_train = x_train.reindex(idx)
+        batches_count = int(x_train.shape[0] / batch_size)
+        for i in range(batches_count):
+            x_batch = x_train[i * batch_size:(i + 1) * batch_size]
+            y_batch = y_train[i * batch_size:(i + 1) * batch_size]
+            session.run(optimizer, feed_dict={
+                autoencoder['x']: x_batch,
+                autoencoder['corrupt_prob']: [1.0],
+            })
+
+def cross_validate(session, optimizer, autoencoder, x_train, y_train, split_size=10):
+    results = []
+    kfold = StratifiedKFold(n_splits=split_size)
+    for idx_train, idx_cv in kfold.split(x_train, y_train):
+        x_train_cv = x_train[idx_train]
+        y_train_cv = y_train[idx_train]
+        x_cv = x_train[idx_cv]
+        y_cv = y_train[idx_cv]
+        run_train(session, optimizer, autoencoder, x_cv, y_cv)
+        cost = session.run(autoencoder['cost'], feed_dict={autoencoder['x']: x_cv, autoencoder['corrupt_prob']: [0.0]})
+        results.append(cost)
+    return results
+
 # %%
 def run():
     import tensorflow as tf
@@ -134,14 +165,13 @@ def run():
     from infants import X_ALL
     from infants import Y_ALL
     from infants import X_ALL_SCALED
-    from sklearn.model_selection import train_test_split
+    from sklearn.model_selection import cross_val_score
 
     # %%
     # load infants
-    X_TRAIN, X_TEST = train_test_split(X_ALL_SCALED, test_size=0.30, shuffle=False)
-    Y_TRAIN, Y_TEST = train_test_split(Y_ALL, test_size=0.30, shuffle=False)
-    BATCH_SIZE = 256
-    EPOCHS_COUNT = 100
+    X_TRAIN = X_ALL_SCALED
+    Y_TRAIN = Y_ALL
+
     FEATURES_COUNT = len(X_ALL.columns)
 
     autoencoder = get_autoencoder(dimensions=[FEATURES_COUNT, FEATURES_COUNT + 7, FEATURES_COUNT + 14, FEATURES_COUNT + 21, FEATURES_COUNT + 28])
@@ -152,49 +182,16 @@ def run():
 
     # %%
     # We create a session to use the graph
-    sess = tf.Session()
-    sess.run(tf.global_variables_initializer())
+    session = tf.Session()
+    session.run(tf.global_variables_initializer())
     merged_summaries = tf.summary.merge_all()
     file_writer = tf.summary.FileWriter('logs')
-    file_writer.add_graph(sess.graph)
+    file_writer.add_graph(session.graph)
+
     # %%
     # Fit all training data
-    X_TRAIN_SIZE = X_TRAIN.size // FEATURES_COUNT
-    BATCHES_COUNT = X_TRAIN_SIZE // BATCH_SIZE
-    logging.debug(
-        "Running session BATCHES_COUNT=%d, BATCH_SIZE=%d, X_TRAIN_SIZE=%d",
-        BATCHES_COUNT, BATCH_SIZE, X_TRAIN_SIZE,
-    )
-    for epoch_i in range(EPOCHS_COUNT):
-        for batch_i in range(BATCHES_COUNT):
-            X_TRAIN_BATCH = X_TRAIN[batch_i * BATCH_SIZE:(batch_i + 1) * BATCH_SIZE]
-            sess.run(optimizer, feed_dict={autoencoder['x']: X_TRAIN_BATCH, autoencoder['corrupt_prob']: [1.0]})
-
-        # cost = sess.run(ae['cost'], feed_dict={ae['x']: X_TRAIN_BATCH})
-        summaries = sess.run(merged_summaries, feed_dict={autoencoder['x']: X_TRAIN_BATCH, autoencoder['corrupt_prob']: [1.0]})
-        file_writer.add_summary(summaries, epoch_i)
-        logging.debug("Running [epoch_index=%s]", epoch_i)
-
-    # %%
-    cost = sess.run(autoencoder['cost'], feed_dict={autoencoder['x']: X_TEST, autoencoder['corrupt_prob']: [0.0]})
-    print(cost)
-    _cost = sess.run(imputation_cost(X_TEST))
-    print(_cost)
-
-    X_TEST_NEW = sess.run(autoencoder['y'], feed_dict={autoencoder['x']: X_TEST, autoencoder['corrupt_prob']: [0.0]})
-
-    clf = SVC(probability=True, random_state=0)
-    scores = cross_val_score(clf, X_TEST_NEW, Y_TEST, cv=10, scoring='f1')
-
-    logging.info("Ran SVM DAE")
-    logging.info("Mean F1 {:0.2f} (+/- {:0.2f})".format(scores.mean(), scores.std() * 2))
-
-    imputer = Imputer(missing_values=0)
-    X_TEST_IMPUTED = imputer.fit_transform(X_TEST)
-    scores = cross_val_score(clf, X_TEST_IMPUTED, Y_TEST, cv=10, scoring='f1')
-
-    logging.info("Ran SVM IMPUTED")
-    logging.info("Mean F1 {:0.2f} (+/- {:0.2f})".format(scores.mean(), scores.std() * 2))
+    results = cross_validate(session, optimizer, autoencoder, X_TRAIN, Y_TRAIN)
+    logging.debug("Cross validation results %s", results)
 
 if __name__ == '__main__':
     run()
