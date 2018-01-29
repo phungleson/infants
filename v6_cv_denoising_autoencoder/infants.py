@@ -20,14 +20,13 @@ def column_indexes(data_frame, column_names):
 DEATHS_CSV = pd.read_csv("deaths_2010.csv", low_memory=False)
 BIRTHS_CSV = pd.read_csv("births_2010_24174.csv", low_memory=False)
 
-X_COLUMNS = BIRTHS_CSV.columns
+X_COLUMNS = [c for i, c in enumerate(BIRTHS_CSV.columns.values) if c not in ['idnumber']]
 
 logging.info("DEATHS_CSV.columns - BIRTHS_CSV.columns = %s", set(DEATHS_CSV.columns) - set(BIRTHS_CSV.columns))
 logging.info("BIRTHS_CSV.columns - DEATHS_CSV.columns = %s", set(BIRTHS_CSV.columns) - set(DEATHS_CSV.columns))
 
 Y_DEATHS = pd.Series([1] * len(DEATHS_CSV))
 Y_BIRTHS = pd.Series([0] * len(BIRTHS_CSV))
-# Y_ALL = pd.Series([1] * (len(DEATHS_CSV) + len(BIRTHS_CSV)))
 
 X_ALL = pd.concat([DEATHS_CSV[X_COLUMNS], BIRTHS_CSV[X_COLUMNS]])
 Y_ALL = pd.concat([Y_DEATHS, Y_BIRTHS], ignore_index=True)
@@ -82,11 +81,7 @@ X_ALL_SCALED = MIN_MAX_SCALER.fit_transform(X_ALL)
 
 X_ALL_SCALED_DF = pd.DataFrame(X_ALL_SCALED)
 
-logging.debug("%s", Y_ALL.shape)
-logging.debug("%s", X_ALL_SCALED_DF.shape)
-
-COLUMNS = np.append(BIRTHS_CSV.columns.values, ['target'])
-# Y_ALL_SERIES = pd.Series(Y_ALL, name='label')
+COLUMNS = np.append(X_COLUMNS, ['target'])
 
 ALL = pd.concat([X_ALL_SCALED_DF, Y_ALL], axis=1)
 
