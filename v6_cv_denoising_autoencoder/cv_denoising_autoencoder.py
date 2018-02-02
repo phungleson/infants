@@ -169,10 +169,12 @@ def run():
 
     # %%
     # load infants
-    X_TRAIN = X_ALL_SCALED
-    Y_TRAIN = Y_ALL
+    INFANTS_CSV = pd.read_csv("infants.csv", low_memory=False)
+    X_COLUMNS = INFANTS_CSV.columns.values[:-1]
+    X_TRAIN = INFANTS_CSV[X_COLUMNS]
+    Y_TRAIN = INFANTS_CSV[['target']]
 
-    FEATURES_COUNT = len(X_ALL.columns)
+    FEATURES_COUNT = len(X_COLUMNS)
 
     autoencoder = get_autoencoder(dimensions=[FEATURES_COUNT, FEATURES_COUNT + 7, FEATURES_COUNT + 14, FEATURES_COUNT + 21, FEATURES_COUNT + 28])
     # %%
