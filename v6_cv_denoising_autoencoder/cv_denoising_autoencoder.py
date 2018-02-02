@@ -144,7 +144,7 @@ def run_train(session, optimizer, autoencoder, x_train, y_train):
                 autoencoder['corrupt_prob']: [1.0],
             })
 
-def cross_validate(session, optimizer, autoencoder, x_train, y_train, split_size=10):
+def cross_validate(session, optimizer, autoencoder, x_train, y_train, split_size=3):
     results = []
     kfold = StratifiedKFold(n_splits=split_size)
     for idx_train, idx_cv in kfold.split(x_train, y_train):
@@ -162,17 +162,18 @@ def run():
     import tensorflow as tf
     import tensorflow.examples.tutorials.mnist.input_data as input_data
     import matplotlib.pyplot as plt
-    from infants import X_ALL
-    from infants import Y_ALL
-    from infants import X_ALL_SCALED
     from sklearn.model_selection import cross_val_score
 
     # %%
     # load infants
     INFANTS_CSV = pd.read_csv("infants.csv", low_memory=False)
     X_COLUMNS = INFANTS_CSV.columns.values[:-1]
+    logging.info(X_COLUMNS)
     X_TRAIN = INFANTS_CSV[X_COLUMNS]
     Y_TRAIN = INFANTS_CSV[['target']]
+
+    logging.info(X_TRAIN)
+    logging.info(Y_TRAIN)
 
     FEATURES_COUNT = len(X_COLUMNS)
 
